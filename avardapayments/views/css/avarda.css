@@ -1,0 +1,96 @@
+#avarda-checkout {
+    margin-bottom: 3em;
+}
+
+body#module-avardapayments-checkout #header .header-nav {
+    max-height: none;
+    padding: 5rem 0 .9375rem;
+    border: none;
+    margin-bottom: 0;
+    box-shadow: 2px 2px 8px 0 rgba(0,0,0,.2);
+}
+
+input.cb-createuser, input.cb-optfornews {
+    /* Double-sized Checkboxes */
+    -ms-transform: scale(1.5); /* IE */
+    -moz-transform: scale(1.5); /* FF */
+    -webkit-transform: scale(1.5); /* Safari and Chrome */
+    -o-transform: scale(1.5); /* Opera */
+    transform: scale(1.5);
+}
+
+label.user-label, label.news-label {
+    padding-left: 10px;
+    font-size: 1rem;
+}
+
+label.label-help {
+    padding-left: 10px;
+}
+
+label.error {
+    color: #ff0033;
+    display: none;
+}
+
+.container-checkbox, .container-radio {
+    padding-top: 0.5rem;
+}
+
+.container-textarea {
+    padding: 1rem 0;
+}
+
+h1.title {
+    margin: 1rem 0;
+}
+
+.carriere-name-container, .carrier-name {
+    text-align: start;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.align-items-center {
+    display: flex;
+    align-items: center;
+}
+
+.carrier {
+    padding-bottom: 10px;
+}
+
+textarea {
+    max-width: 100%;
+}
+
+
+
+.changeLanguageButton:hover {
+    background-color: #90EE90;
+    border-color: #008000;
+    color: #ffffff;
+}
+
+.changeLanguageButton {
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: normal;
+    font-family: inherit;
+    text-transform: none;
+    background-color: #32CD32;
+    border-color: #008000;
+    color: #ffffff;
+    border-width: 1px;
+    // border-style: solid;
+    // min-height: 50px;
+    font-size: 1rem;
+    padding-left: 1.5;
+    font-weight: 700;
+    // line-height: 24px;
+    border-radius: 5px;
+    // box-shadow: 0px 0px 0px 0px #000000;
+    // padding: 10px 16px 10px 16px;
+}

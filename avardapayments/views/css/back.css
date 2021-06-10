@@ -1,0 +1,12 @@
+.app-content {
+  padding: 100px 30px;
+}
+
+.page-sidebar:not(.page-sidebar-closed) #content {
+  margin-left: 210px !important;
+}
+
+.lang-rtl.page-sidebar:not(.page-sidebar-closed) #content {
+  margin-right: 210px !important;
+  margin-left: 0px !important;
+}
