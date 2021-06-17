@@ -42,8 +42,8 @@ class Utils
         $items = array_map(function ($product) {
             return [
                 'description' => static::maxChars($product['quantity'] . ' x ' . $product['name'], 35),
-                'amount' => static::roundPrice($product['total_wt']),
-                'taxAmount' => static::roundPrice($product['total_wt']) - static::roundPrice($product['total']),
+                'amount' => strval(static::roundPrice($product['total_wt'])),
+                'taxAmount' => strval(static::roundPrice($product['total_wt']) - static::roundPrice($product['total'])),
             ];
         }, $cart->getProducts());
 
@@ -51,7 +51,7 @@ class Utils
         if ($discount > 0) {
             $items[] = [
                 'description' => 'Discount',
-                'amount' => -1 * $discount,
+                'amount' => strval(-1 * $discount),
                 'taxAmount' => 0
             ];
         }
@@ -59,7 +59,7 @@ class Utils
         $deliveryItemCost = $cart->getOrderTotal(true, Cart::ONLY_SHIPPING);
         $deliveryItem = [
             'description' => $deliveryDescription,
-            'amount' => $deliveryItemCost,
+            'amount' => strval($deliveryItemCost),
             'taxAmount' => 0
         ];
         array_push($items, $deliveryItem);
