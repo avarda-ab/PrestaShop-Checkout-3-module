@@ -86,7 +86,13 @@
             }
 
         function avardaBootsrap() {
-            /*
+					let initUrl = ''
+					if("{$apiEnv}" === 'prod') {
+						initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+					} else {
+						initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+					}
+					/*
             Literal tells smarty that the lines shouldn't be parsed.
             */
             {literal}
@@ -99,7 +105,9 @@
             
             r=t.getElementsByTagName(n)[0];
             {/literal}
-            r.parentNode.insertBefore(i,r)})(window,document,"script","avardaCheckoutInit","avardaCheckout","1.0.0","https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js");
+            r.parentNode.insertBefore(i,r)})(window,document,"script","avardaCheckoutInit","avardaCheckout","1.0.0", initUrl);
+
+
 
             var sessionTimedOutCallback = function(avardaCheckoutInstance) {
                 //This is required

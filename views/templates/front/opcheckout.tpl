@@ -301,59 +301,70 @@
             }
             
             async function avardaBootsrap() {
-                /*
-                Literal tells smarty that the lines shouldn't be parsed.
-                */
-                {literal}
-                (function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
+							let initUrl = ''
+								if("{$apiEnv}" === 'prod') {
+									initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+								} else {
+									initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+								}
+								
+								/*
+								Literal tells smarty that the lines shouldn't be parsed.
+								*/
+								{literal}
+								(function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
 
-                e[a].i=s;
-                i=t.createElement(n);
-                i.async=1;
-                i.src=o+"?v="+c+"&ts="+1*new Date;
-                
-                r=t.getElementsByTagName(n)[0];
-                {/literal}
-                r.parentNode.insertBefore(i,r)})(window,document,"script","avardaCheckoutInit","avardaCheckout","1.0.0","https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js");
+								e[a].i=s;
+								i=t.createElement(n);
+								i.async=1;
+								i.src=o+"?v="+c+"&ts="+1*new Date;
+								
+								r=t.getElementsByTagName(n)[0];
+								{/literal}
 
-                 var sessionTimedOutCallback = function(avardaCheckoutInstance) {
-                    //This is required
-                    //console.log("Session Timed Out - Handle here!")
-                };
+								
 
-               
-                window.avardaCheckoutInit({
-                    "purchaseJwt": "{$avardaPurchaseToken}",
-                    "rootElementId": "avarda-checkout",
-                    "redirectUrl": "{$avardaCheckoutUrl}",
-                    "styles": {},
-                    "disableFocus": true,
-                    "completedPurchaseCallback": postProcessing,
-                    "sessionTimedOutCallback": sessionTimedOutCallback,
-                    "beforeSubmitCallback": await preProcessing,
-                    "CompletedNotificationUrl": "{$paymentCallbackUrl}"
-                });
+								console.log(initUrl)
+								r.parentNode.insertBefore(i,r)})(window,document,"script","avardaCheckoutInit","avardaCheckout","1.0.0", initUrl);
 
-                 prestashop.on('updateCart', function () {
-                    $.post("{$avardaCheckoutUrl}", {
-                        ajax: true,
-                        action: 'updateCart'
-                    }).done(function (response) {
-                        window.avardaCheckout.refreshForm();
-                        window.location.reload(true);
-                    });
-                });
-            }
+									var sessionTimedOutCallback = function(avardaCheckoutInstance) {
+										//This is required
+										//console.log("Session Timed Out - Handle here!")
+								};
 
-            if (document.readyState === 'complete') {
-                if("{$apiErrorMsg}" === '') avardaBootsrap();
-            } else { 
-                document.addEventListener('readystatechange', function() {
-                    if (document.readyState === 'complete') {
-                        if('{$apiErrorMsg}' === '') avardaBootsrap();
-                    }
-                });
-            }
+								
+								window.avardaCheckoutInit({
+										"purchaseJwt": "{$avardaPurchaseToken}",
+										"rootElementId": "avarda-checkout",
+										"redirectUrl": "{$avardaCheckoutUrl}",
+										"styles": {},
+										"disableFocus": true,
+										"completedPurchaseCallback": postProcessing,
+										"sessionTimedOutCallback": sessionTimedOutCallback,
+										"beforeSubmitCallback": await preProcessing,
+										"CompletedNotificationUrl": "{$paymentCallbackUrl}"
+								});
+
+									prestashop.on('updateCart', function () {
+										$.post("{$avardaCheckoutUrl}", {
+												ajax: true,
+												action: 'updateCart'
+										}).done(function (response) {
+												window.avardaCheckout.refreshForm();
+												window.location.reload(true);
+										});
+								});
+						}
+
+						if (document.readyState === 'complete') {
+								if("{$apiErrorMsg}" === '') avardaBootsrap();
+						} else { 
+								document.addEventListener('readystatechange', function() {
+										if (document.readyState === 'complete') {
+												if('{$apiErrorMsg}' === '') avardaBootsrap();
+										}
+								});
+						}
         </script>
     {*/strip*}
     {/if}

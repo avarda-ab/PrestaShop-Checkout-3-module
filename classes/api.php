@@ -267,6 +267,17 @@ class Api
         return $language;
     }
 
+		public function getApiEnv() {
+			$env = '';
+			if($this->server === 'test') {
+				$env = 'test';	
+			} else {
+				$env = 'prod';
+			}
+
+			return $env;
+		}
+
     /**
      * executes UpdateItems api method
      *

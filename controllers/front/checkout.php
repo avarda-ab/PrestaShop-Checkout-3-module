@@ -78,6 +78,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             'apiErrorMsg' => $session->error_message,
             'showCart' => $settings->showCart(),
             'formLanguage' => $this->getApi()->getLanguageById($cookie->id_lang),
+						'apiEnv' => $this->getApi()->getApiEnv(),
         ]);
         $this->setTemplate('module:avardapayments/views/templates/front/checkout.tpl');
     }
