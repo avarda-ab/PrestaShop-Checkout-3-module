@@ -21,7 +21,10 @@ class avardapaymentsnotificationReceiverModuleFrontController extends ModuleFron
   public function postProcess()
   {
     $json = file_get_contents('php://input');
-    $data = json_decode($json);
+		if(empty($json)) {
+			exit;
+		}
+		$data = json_decode($json);
     //Logger::addLog('values in notificationreceiver' . var_dump($data), 1, null, null, null, true);
     $purchaseIdFromCallback = $data->purchaseId;
     if(!empty($purchaseIdFromCallback)) {
