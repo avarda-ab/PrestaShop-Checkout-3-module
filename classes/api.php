@@ -237,10 +237,10 @@ class Api
         
         $isLocalhost = in_array($_SERVER['SERVER_NAME'], $localAddresses);
         
-        if(!$isLocalhost){
+        if(!$isLocalhost) {
             $name = $context->controller->module->name;
             $link = $context->link->getModuleLink($name, 'notificationReceiver');
-            array_push($checkoutSetup, array("completedNotificationUrl" => $link));
+            $checkoutSetup['completedNotificationUrl'] = $link;
         }
 
         return $checkoutSetup;
@@ -269,10 +269,12 @@ class Api
 
 		public function getApiEnv() {
 			$env = '';
-			if($this->server === 'test') {
+			if($this->server === 'https://avdonl-s-checkout.avarda.org') {
 				$env = 'test';	
-			} else {
+			} else if($this->server === 'https://avdonl-p-checkout.avarda.org') {
 				$env = 'prod';
+			} else {
+				throw new AvardaException("API environment not found");
 			}
 
 			return $env;
