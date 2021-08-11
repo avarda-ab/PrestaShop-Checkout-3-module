@@ -211,7 +211,7 @@ class Api
                     "userInputs" => array(
                         "phone" => $phoneNumber,
                         "email" => $customerInfo['Mail']
-                    )
+										)
                 ),
             );
         }
@@ -352,21 +352,31 @@ class Api
      */
     public function createPurchaseOrder($orderReference, $purchaseId, $items, $trackingCode=null, $posId=null)
     {   
+			//TODO: why doesn't the orderReference appear anywhere?
         $payload = [
-            "items" => $items,
-            "orderReference" => $orderReference,
-            'tranId' => Tools::passwdGen(30),
+            "Items" => $items,
+            "OrderReference" => $orderReference,
+            'TranId' => Tools::passwdGen(30),
         ];
         
-        if ($trackingCode) {
-            $payload['trackingCode'] = $trackingCode;
+        if (!empty($trackingCode)) {
+            $payload['TrackingCode'] = $trackingCode;
         }
-        if ($posId) {
-            $payload['posId'] = $posId;
+        if (!empty($posId)) {
+            $payload['PosId'] = $posId;
         }
         
         return $this->execute('/api/partner/payments/' . $purchaseId . '/order', $payload, 'POST', 'createPurchaseOrder');
     }
+
+		public function putExtraIdentifiers($orderReference, $purchaseId) {
+			
+			$payload = [
+				'orderReference' => $orderReference
+			];
+
+			return $this->execute('/api/partner/payments/' . $purchaseId . '/extraidentifiers', $payload, 'PUT', 'putExtraIdentifiers');
+		}
     /* Old code that might be useful
     public function createPurchaseOrder($orderReference, $purchaseId, $items, $trackingCode=null, $posId=null)
     {

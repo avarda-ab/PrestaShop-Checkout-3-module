@@ -224,8 +224,8 @@ class OrderManager
         $items = array_map(function ($row) {
             return [
                 'description' => Utils::maxChars($row['product_name'], 35),
-                'amount' => Utils::roundPrice($row['total_price_tax_incl']),
-                'taxAmount' => Utils::roundPrice($row['total_price_tax_incl']) - Utils::roundPrice($row['total_price_tax_excl']),
+                'amount' => strval(Utils::roundPrice($row['total_price_tax_incl'])),
+                'taxAmount' => strval(Utils::roundPrice($row['total_price_tax_incl']) - Utils::roundPrice($row['total_price_tax_excl'])),
                 'quantity' => (int) $row['product_quantity'] 
             ];
         }, $order->getProductsDetail());
@@ -233,15 +233,15 @@ class OrderManager
         if ($order->total_discounts_tax_incl !== 0) {
             $items[] = [
                 'description' => 'Discount',
-                'amount' => Utils::roundPrice(-1 * $order->total_discounts),
-                'taxAmount' => Utils::roundPrice(-1 * $order->total_discounts_tax_incl) - Utils::roundPrice(-1 * $order->total_discounts_tax_excl)
+                'amount' => strval(Utils::roundPrice(-1 * $order->total_discounts)),
+                'taxAmount' => strval(Utils::roundPrice(-1 * $order->total_discounts_tax_incl) - Utils::roundPrice(-1 * $order->total_discounts_tax_excl))
             ];
         }
 
         if ($order->total_shipping_tax_incl > 0) {
             $items[] = [
                 'description' => 'Shipping',
-                'amount' => Utils::roundPrice($order->total_shipping_tax_incl),
+                'amount' => strval(Utils::roundPrice($order->total_shipping_tax_incl)),
                 'taxAmount' => 0,
                 'quantity' => 1,
             ];
@@ -250,8 +250,8 @@ class OrderManager
         if ($order->total_wrapping_tax_incl > 0) {
             $items[] = [
                 'description' => 'Wrapping',
-                'amount' => Utils::roundPrice($order->total_wrapping_tax_incl),
-                'taxAmount' => Utils::roundPrice($order->total_wrapping_tax_incl) - Utils::roundPrice($order->total_wrapping_tax_excl),
+                'amount' => strval(Utils::roundPrice($order->total_wrapping_tax_incl)),
+                'taxAmount' => strval(Utils::roundPrice($order->total_wrapping_tax_incl) - Utils::roundPrice($order->total_wrapping_tax_excl)),
                 'quantity' => 1
             ];
         }
@@ -264,7 +264,7 @@ class OrderManager
         if (abs($diff) > 0) {
             $items[] = [
                 'description' => 'adjustment',
-                'amount' => $diff,
+                'amount' => strval($diff),
                 'taxAmount' => 0,
                 'quantity' => 1
             ];

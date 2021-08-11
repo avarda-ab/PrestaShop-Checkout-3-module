@@ -245,14 +245,18 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             return $this->updateCustomerInfo($session, $params);
         }
         if ($action === 'createuser') {
-            try {
-                $created = $this->createCustomer($session, $params);
-                if($created) {
-                    return $this->validatePayment($session);
-                }
-            } catch(Exception $e) {
-                Logger::addLog('processAjax(): createcustomer / validatepayment error: ' . $e, 1, null, null, null, true);
-            }
+					try {
+							$created = $this->createCustomer($session, $params);
+							if($created) {
+									return $this->validatePayment($session);
+							}
+						} catch(Exception $e) {
+							if(strpos($e, 'Notice: Undefined offset:') || strpos($e, 'Notice: Undefined variable: order')) {
+							//do nothing here, go to confirmation page
+							} else {
+								Logger::addLog('processAjax(): createcustomer / validatepayment error: ' . $e, 1, null, null, null, true);
+							}	
+						}
         }
         if ($action === 'compareuser') {
             $this->compareCustomer($session);
@@ -605,6 +609,9 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $session->id_order = (int)$this->module->currentOrder;
             $session->save();
 
+						//add order reference to Avarda
+						$response = $this->getApi()->putExtraIdentifiers($this->module->currentOrderReference, $session->purchase_id);
+
             $order = new Order((int)$this->module->currentOrder);
 
             $orderManager = $this->module->getOrderManager();
@@ -622,7 +629,6 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 Logger::addLog('validatePayment(): error - ' . $e, 3, null, null, null, true);
                 return false;
             }
-            
         }
         
         // redirect to confirmation page
