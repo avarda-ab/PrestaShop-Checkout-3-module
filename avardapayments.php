@@ -276,8 +276,14 @@ class AvardaPayments extends PaymentModule
         // Looks weird but we need to parse new line from json to enter to make css pre-line work.
         $parsedModuleDescription = str_replace('\n', '
         ', $moduleDescription);
-        
-        $this->smarty->assign('imgsBaseUri', rtrim($this->_path, '/') . '/views/img');
+        $logoDir =  _PS_MODULE_DIR_ . $this->name . '/uploads';
+				foreach (new DirectoryIterator($logoDir) as $file) {
+					if($file->isDot()) continue;
+					$logo = $file->getFilename();
+				}
+	
+				$logoUrl = _MODULE_DIR_ . $this->name . '/uploads/' . $logo;
+        $this->smarty->assign('logoUrl', $logoUrl);
         $this->smarty->assign('description', $parsedModuleDescription);
         $option = new PaymentOption();
         $option->setCallToActionText($moduleName)
@@ -451,6 +457,6 @@ class AvardaPayments extends PaymentModule
         $uri = rtrim($this->getPathUri(), '/');
         $rel = ltrim($relative, '/');
         return "$uri/$rel";
-    }
+    }		
 }
 

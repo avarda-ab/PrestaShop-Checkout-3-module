@@ -15,6 +15,7 @@
  * @copyright 2017-2019 Petr Hucik
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *}
+ <img class="logo-responsive" src="{$logoUrl}" />
 <p class="description">{$description}</p>
 
 <style>
