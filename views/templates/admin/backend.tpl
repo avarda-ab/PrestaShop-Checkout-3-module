@@ -51,11 +51,29 @@
     </div>
   </div>
   <div>
+  <div>
     <label class="module-label-description">{l s="Module description" mod='avardapayments'}</label>
   </div>
   <div>
     <textarea id="module-description" class="module-description" type="text" value="{$settings.moduleInfo['moduleDescription']}">{$settings.moduleInfo['moduleDescription']}</textarea>
   </div>
+	{*TODO: show this only if opc mode is enabled*}
+	{if ! $settings.useOnePage}
+		<h2 class="jss45">{l s='Add logo' mod='avardapayments'}</h2>
+		<div>
+			<label class="module-label">{l s="Logo" mod='avardapayments'}</label>
+			<div>
+				<form action="{$controllerLink|escape:'htmlall':'utf-8'}" enctype="multipart/form-data" method="POST">
+					<input name="userfile" type="file" />
+					<input type="submit" value={l s="Upload" mod='avardapayments'} name='submit' />
+				</form>
+				{if isset($uploadError) && $uploadError !== ""} 		<p class="uploadError"> {$uploadError} </p> 
+				{else if isset($uploadSuccess)}
+					<p class="uploadSuccess"> {$uploadSuccess} </p> 
+				{/if}
+			</div>
+		</div>
+	{/if}
   <div class="jss35">
     {l s="Shown for customers when one page checkout is disabled" mod='avardapayments'}
   </div>
@@ -64,6 +82,7 @@
     
     If you have multilingual website and you are using one page checkout, leave these fields empty. The module will then use default values which are translatable in PrestaShop->International->Translations (Modify translations: Installed modules translations: Avarda)." mod='avardapayments'}
   </div>
+	
   <button class="module-save-button" tabindex="0" type="button" id="module-save-button">{l s="Save" mod='avardapayments'}</button>
 </div>
 <div id="avarda-app"></div>
