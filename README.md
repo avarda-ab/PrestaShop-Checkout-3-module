@@ -1,5 +1,5 @@
 # Avarda-Payments
-Avardas payment module for Prestashop.
+Avardas' payment module for Prestashop.
 
 ### Language settings
 
