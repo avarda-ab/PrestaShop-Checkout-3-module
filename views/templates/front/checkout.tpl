@@ -69,23 +69,23 @@
         {*strip*}
         <script>
             function avardaValidate() {
-                $.post("{$avardaCheckoutUrl}", {
+              $.post("{$avardaCheckoutUrl nofilter}", {
                 ajax: true,
                 action: 'compareuser'
-            }).done(function(response) {
-            $.post("{$avardaCheckoutUrl}", {
-            ajax: true,
-            action: 'validate'
-            }).done(function(response) {
-            if (response) {
-                if (response.indexOf('http') === 0) {
-                    window.location.href = response;
-                } else if (response === 'validateFailed') {
-                    avardaValidate();
-                }
-            }
-            });
-            });
+              }).done(function(response) {
+                $.post("{$avardaCheckoutUrl nofilter}", {
+                  ajax: true,
+                  action: 'validate'
+                }).done(function(response) {
+                  if (response) {
+                    if (response.indexOf('http') === 0) {
+                      window.location.href = response;
+                    } else if (response === 'validateFailed') {
+                      avardaValidate();
+                    }
+                  }
+                });
+              });
             }
 
             function avardaBootsrap() {
@@ -121,22 +121,22 @@
             window.avardaCheckoutInit({
                 "purchaseJwt": "{$avardaPurchaseToken}",
                 "rootElementId": "avarda-checkout",
-                "redirectUrl": "{$avardaCheckoutUrl}",
+                "redirectUrl": "{$avardaCheckoutUrl nofilter}",
                 "styles": {},
                 "disableFocus": true,
                 "completedPurchaseCallback": avardaValidate,
                 "sessionTimedOutCallback": sessionTimedOutCallback,
-                "CompletedNotificationUrl": "{$paymentCallbackUrl}"
+                "CompletedNotificationUrl": "{$paymentCallbackUrl nofilter}"
             });
 
             prestashop.on('updateCart', function() {
-            $.post("{$avardaCheckoutUrl}", {
-            ajax: true,
-            action: 'updateCart'
-            }).done(function(response) {
-            window.avardaCheckout.refreshForm();
-            window.location.reload(true);
-            });
+              $.post("{$avardaCheckoutUrl nofilter}", {
+                ajax: true,
+                action: 'updateCart'
+              }).done(function(response) {
+                window.avardaCheckout.refreshForm();
+                window.location.reload(true);
+              });
             });
 
             }
