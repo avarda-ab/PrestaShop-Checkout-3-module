@@ -376,7 +376,7 @@ class AvardaPayments extends PaymentModule
         try {
             $manager = $this->getOrderManager();
         } catch (Exception $e) {
-            // FIXME: write to log
+            // this can happen quite a lot, no point in logging this (at least here)
             return null;
         }
         if (!$manager->isAvardaOrder($order)) {
