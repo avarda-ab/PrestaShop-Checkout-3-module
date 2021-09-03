@@ -119,16 +119,16 @@
                                     data-avarda-action="capture">{l s='Capture now' mod='avardapayments'}</button>
                                 <button class="btn btn-danger"
                                     data-avarda-action="cancel">{l s='Cancel payment' mod='avardapayments'}</button>
-                                                        <input type="text" id="avarda-refund" name="avarda-refund"
-                                placeholder="{l s='Amount to refund' mod='avardapayments'}"
-                                value="{max(0, $avardaRemaining - $avardaOrder->total_paid_tax_incl)}"
-                                class="form-control fixed-width-lg">
-                            <button class="btn btn-default"
-                                data-avarda-action="refund">{l s='Refund' mod='avardapayments'}</button>
+                                <input type="text" id="avarda-refund" name="avarda-refund"
+                                    placeholder="{l s='Amount to refund' mod='avardapayments'}"
+                                    value="{max(0, $avardaRemaining - $avardaOrder->total_paid_tax_incl)}"
+                                    class="form-control fixed-width-lg">
+                                <button class="btn btn-default"
+                                    data-avarda-action="refund">{l s='Refund' mod='avardapayments'}</button>
 
                             </div>
                         </div>
-                    {elseif $avardaStatus === 2}
+                    {elseif $avardaStatus === 2 and $avardaRemaining > 0}
                         <div class="form form-infline">
                             <h4>{l s='Return item' mod='avardapayments'}</h4>
                             <input type="text" id="avarda-return" name="avarda-return"
