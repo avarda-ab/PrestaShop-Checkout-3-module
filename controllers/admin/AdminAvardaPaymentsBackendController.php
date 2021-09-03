@@ -30,7 +30,7 @@ class AdminAvardaPaymentsBackendController extends ModuleAdminController
         $this->display = 'view';
         $this->bootstrap = false;
         $this->addCSS($this->module->getPath('views/css/back.css'));
-        $this->addJs($this->module->getSettings()->getBackendAppUrl($this->module));
+        $this->addJs($this->module->getPath('views/js/back.js'));
     }
 
     /**
@@ -454,6 +454,7 @@ class AdminAvardaPaymentsBackendController extends ModuleAdminController
 
     private function compressImage(string $source, string $destination, int $quality)
     {
+        return true;
         $info = getimagesize($source);
         if ($info['mime'] == 'image/jpeg') {
             $image = imagecreatefromjpeg($source);
