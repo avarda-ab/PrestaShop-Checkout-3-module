@@ -258,7 +258,7 @@ class AvardaPayments extends PaymentModule
     /**
      * @return array|null
      */
-    public function hookPaymentOptions()
+    public function hookPaymentOptions($params)
     {
         if (!$this->active) {
             return null;
@@ -362,28 +362,33 @@ class AvardaPayments extends PaymentModule
         }
         $id_order = (int) $params['id_order'];
         $order = new Order($id_order);
-        $manager = $this->getOrderManager();
-        if ($manager->isAvardaOrder($order)) {
-            $context = Context::getContext();
-            $langId = (int) $context->language->id;
-            $settings = $this->getSettings();
-            $deliveryStatus = new OrderState($settings->getDeliveryStatus(), $langId);
-            $params = [
-                'avardaApiUrl' => $this->context->link->getAdminLink('AdminAvardaPaymentsBackend'),
-                'avardaOrder' => $order,
-                'avardaStatus' => $manager->getOrderStatus($order),
-                'avardaRemaining' => $manager->getRemainingBalance($order),
-                'avardaCaptured' => $manager->getCapturedBalance($order),
-                'avardaReturned' => $manager->getReturnedBalance($order),
-                'avardaCanceled' => $manager->getCanceledBalance($order),
-                'avardaCanReturn' => $manager->canReturn($order),
-                'avardaTransactions' => AvardaTransaction::getForOrder($order, true),
-                'avardaDeliveryStatus' => $deliveryStatus->name,
-            ];
-            Context::getContext()->smarty->assign($params);
-
-            return $this->display(__FILE__, 'admin-order.tpl');
+        try {
+            $manager = $this->getOrderManager();
+        } catch (Exception $e) {
+            // FIXME: write to log
+            return null;
         }
+        if (!$manager->isAvardaOrder($order)) {
+            return null;
+        }
+        $context = Context::getContext();
+        $langId = (int) $context->language->id;
+        $settings = $this->getSettings();
+        $deliveryStatus = new OrderState($settings->getDeliveryStatus(), $langId);
+        $params = [
+            'avardaApiUrl' => $this->context->link->getAdminLink('AdminAvardaPaymentsBackend'),
+            'avardaOrder' => $order,
+            'avardaStatus' => $manager->getOrderStatus($order),
+            'avardaRemaining' => $manager->getRemainingBalance($order),
+            'avardaCaptured' => $manager->getCapturedBalance($order),
+            'avardaReturned' => $manager->getReturnedBalance($order),
+            'avardaCanceled' => $manager->getCanceledBalance($order),
+            'avardaCanReturn' => $manager->canReturn($order),
+            'avardaTransactions' => AvardaTransaction::getForOrder($order, true),
+            'avardaDeliveryStatus' => $deliveryStatus->name,
+        ];
+        Context::getContext()->smarty->assign($params);
+        return $this->display(__FILE__, 'admin-order.tpl');
     }
 
     /**
