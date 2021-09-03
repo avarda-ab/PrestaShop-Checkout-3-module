@@ -20,92 +20,96 @@
     {capture name=path}{l s='Checkout' mod='avardapayments'}{/capture}
     {* render errors and warnings *}
     {if isset($avardaError)}
-    <div class="alert alert-warning">
-        {$avardaError|escape:'html':'UTF-8'}
-    </div>
+        <div class="alert alert-warning">
+            {$avardaError|escape:'html':'UTF-8'}
+        </div>
     {/if}
 
     {* render cart information *}
     {if $showCart && isset($cart)}
-    <div class="row">
-        {* cart products detailed *}
-        <div class="cart-grid-body col-xs-12 col-lg-8">
-            <div class="card cart-container">
-                <div class="card-block">
-                    <h1 class="h1">{l s='Shopping Cart' mod='avardapayments'}</h1>
+        <div class="row">
+            {* cart products detailed *}
+            <div class="cart-grid-body col-xs-12 col-lg-8">
+                <div class="card cart-container">
+                    <div class="card-block">
+                        <h1 class="h1">{l s='Shopping Cart' mod='avardapayments'}</h1>
+                    </div>
+                    <hr class="separator">
+                    {include file='checkout/_partials/cart-detailed.tpl' cart=$cart}
                 </div>
-                <hr class="separator">
-                {include file='checkout/_partials/cart-detailed.tpl' cart=$cart}
+            </div>
+
+            {* cart summary *}
+            <div class="cart-grid-right col-xs-12 col-lg-4">
+                {block name='cart_summary'}
+                    <div class="card cart-summary">
+                        {block name='hook_shopping_cart'}
+                            {hook h='displayShoppingCart'}
+                        {/block}
+
+                        {block name='cart_totals'}
+                            {include file='checkout/_partials/cart-detailed-totals.tpl' cart=$cart}
+                        {/block}
+                    </div>
+                {/block}
             </div>
         </div>
-
-        {* cart summary *}
-        <div class="cart-grid-right col-xs-12 col-lg-4">
-            {block name='cart_summary'}
-                <div class="card cart-summary">
-                    {block name='hook_shopping_cart'}
-                        {hook h='displayShoppingCart'}
-                    {/block}
-
-                    {block name='cart_totals'}
-                        {include file='checkout/_partials/cart-detailed-totals.tpl' cart=$cart}
-                    {/block}
-                </div>
-            {/block}
+<!--
+        <div id="checkout-options">
+            <div class="card p-2">
+                <input class="changeLanguageButton" type="button" onclick='avardaCheckout.changeLanguage("{$formLanguage}")'
+                    value="Change language">
+            </div>
         </div>
-    </div>
-    <div id="checkout-options">
-        <div class="card p-2">
-            <input class="changeLanguageButton" type="button" onclick='avardaCheckout.changeLanguage("{$formLanguage}")' value="Change language">
-        </div>
-    </div>
+        -->
     {/if}
     {if isset($avardaPurchaseToken)}
-    <div class="card" id="avarda-checkout">
-    </div>
-    {*strip*}
+        <div class="card" id="avarda-checkout">
+        </div>
+        {*strip*}
         <script>
             function avardaValidate() {
                 $.post("{$avardaCheckoutUrl}", {
-                    ajax: true,
-                    action: 'compareuser'
-                }).done(function (response) {
-                    $.post("{$avardaCheckoutUrl}", {
-                        ajax: true,
-                        action: 'validate'
-                    }).done(function (response) {
-                        if (response) {
-                            if (response.indexOf('http') === 0) {
-                                window.location.href = response;
-                            } else if (response === 'validateFailed') {
-                                avardaValidate();
-                            }
-                        }
-                    });
-                });
+                ajax: true,
+                action: 'compareuser'
+            }).done(function(response) {
+            $.post("{$avardaCheckoutUrl}", {
+            ajax: true,
+            action: 'validate'
+            }).done(function(response) {
+            if (response) {
+                if (response.indexOf('http') === 0) {
+                    window.location.href = response;
+                } else if (response === 'validateFailed') {
+                    avardaValidate();
+                }
+            }
+            });
+            });
             }
 
-        function avardaBootsrap() {
-					let initUrl = ''
-					if("{$apiEnv}" === 'prod') {
-						initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
-					} else {
-						initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
-					}
-					/*
+            function avardaBootsrap() {
+                let initUrl = ''
+                if("{$apiEnv}" === 'prod') {
+                initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+            } else {
+                initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+            }
+            /*
             Literal tells smarty that the lines shouldn't be parsed.
             */
             {literal}
-            (function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
+                (function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
 
-            e[a].i=s;
-            i=t.createElement(n);
-            i.async=1;
-            i.src=o+"?v="+c+"&ts="+1*new Date;
-            
-            r=t.getElementsByTagName(n)[0];
+                e[a].i = s;
+                i = t.createElement(n);
+                i.async = 1;
+                i.src = o + "?v=" + c + "&ts=" + 1 * new Date;
+
+                r = t.getElementsByTagName(n)[0];
             {/literal}
-            r.parentNode.insertBefore(i,r)})(window,document,"script","avardaCheckoutInit","avardaCheckout","1.0.0", initUrl);
+            r.parentNode.insertBefore(i, r)
+            })(window, document, "script", "avardaCheckoutInit", "avardaCheckout", "1.0.0", initUrl);
 
 
 
@@ -125,20 +129,20 @@
                 "CompletedNotificationUrl": "{$paymentCallbackUrl}"
             });
 
-                prestashop.on('updateCart', function () {
-                $.post("{$avardaCheckoutUrl}", {
-                    ajax: true,
-                    action: 'updateCart'
-                }).done(function (response) {
-                    window.avardaCheckout.refreshForm();
-                    window.location.reload(true);
-                });
+            prestashop.on('updateCart', function() {
+            $.post("{$avardaCheckoutUrl}", {
+            ajax: true,
+            action: 'updateCart'
+            }).done(function(response) {
+            window.avardaCheckout.refreshForm();
+            window.location.reload(true);
+            });
             });
 
-        }
+            }
 
             if (document.readyState === 'complete') {
-               if('{$apiErrorMsg}' === '') avardaBootsrap();
+                if('{$apiErrorMsg}' === '') avardaBootsrap();
             } else {
                 document.addEventListener('readystatechange', function() {
                     if (document.readyState === 'complete') {
@@ -146,8 +150,7 @@
                     }
                 });
             }
-
         </script>
-    {*/strip*}
+        {*/strip*}
     {/if}
 {/block}
