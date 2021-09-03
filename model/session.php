@@ -21,7 +21,6 @@ use AvardaPayments\Utils;
 
 class AvardaSession extends ObjectModel
 {
-
     // session timout is seconds
     const SESSION_TIMEOUT = 30 * 60;
 
@@ -77,6 +76,7 @@ class AvardaSession extends ObjectModel
 
     /**
      * @param Order $order
+     *
      * @return AvardaSession|null
      */
     public static function getForOrder(Order $order)
@@ -84,13 +84,15 @@ class AvardaSession extends ObjectModel
         $sql = (new DbQuery())
             ->select('id_session')
             ->from('avarda_session')
-            ->where("id_order = " . (int)$order->id);
-        $id = (int)Db::getInstance()->getValue($sql, false);
+            ->where('id_order = ' . (int) $order->id);
+        $id = (int) Db::getInstance()->getValue($sql, false);
+
         return $id ? new AvardaSession($id) : null;
     }
 
     /**
      * @param $purchaseId
+     *
      * @return AvardaSession|null
      */
     public static function getForPurchaseId($purchaseId)
@@ -98,8 +100,9 @@ class AvardaSession extends ObjectModel
         $sql = (new DbQuery())
             ->select('id_session')
             ->from('avarda_session')
-            ->where("purchase_id = '".pSQL($purchaseId)."'");
-        $id = (int)Db::getInstance()->getValue($sql, false);
+            ->where("purchase_id = '" . pSQL($purchaseId) . "'");
+        $id = (int) Db::getInstance()->getValue($sql, false);
+
         return $id ? new AvardaSession($id) : null;
     }
 
@@ -108,14 +111,16 @@ class AvardaSession extends ObjectModel
      *
      * @param Cart $cart
      * @param $mode
+     *
      * @return AvardaSession
+     *
      * @throws Exception
      */
     public static function getForCart(Cart $cart, $mode)
     {
         static::markExpired();
-        $cartId = (int)$cart->id;
-        $customerId = (int)$cart->id_customer;
+        $cartId = (int) $cart->id;
+        $customerId = (int) $cart->id_customer;
         $sql = (new DbQuery())
             ->select('id_session')
             ->from('avarda_session')
@@ -123,11 +128,11 @@ class AvardaSession extends ObjectModel
             ->where("id_customer = $customerId")
             ->where("status IN ('new', 'processing')")
             ->where('IFNULL(id_order, 0) = 0')
-            ->where("mode = '".pSQL($mode)."'");
-        $id = (int)Db::getInstance()->getValue($sql, false);
+            ->where("mode = '" . pSQL($mode) . "'");
+        $id = (int) Db::getInstance()->getValue($sql, false);
         if ($id) {
             $session = new AvardaSession($id);
-            if (! Validate::isLoadedObject($session)) {
+            if (!Validate::isLoadedObject($session)) {
                 throw new Exception('Avarda session not found');
             }
         } else {
@@ -137,10 +142,11 @@ class AvardaSession extends ObjectModel
             $session->cart_signature = Utils::getCartInfoSignature(Utils::getCartInfo($cart));
             $session->status = 'new';
             $session->mode = $mode;
-            if (! $session->add()) {
+            if (!$session->add()) {
                 throw new Exception('Failed to create new avarda session');
             }
         }
+
         return $session;
     }
 
@@ -151,6 +157,6 @@ class AvardaSession extends ObjectModel
     {
         $threshold = (new DateTime())->sub(new DateInterval('PT' . static::SESSION_TIMEOUT . 'S'));
         $threshold = $threshold->format('Y-m-d H:i:s');
-        Db::getInstance()->execute("UPDATE "._DB_PREFIX_."avarda_session SET `status` = 'expired' WHERE `status` IN ('new', 'processing') AND `date_add` < '$threshold'");
+        Db::getInstance()->execute('UPDATE ' . _DB_PREFIX_ . "avarda_session SET `status` = 'expired' WHERE `status` IN ('new', 'processing') AND `date_add` < '$threshold'");
     }
 }

@@ -2,13 +2,9 @@
 
 use PrestaShop\PrestaShop\Adapter\Presenter\Order\OrderPresenter;
 
-class OrderConfirmationController extends OrderConfirmationControllerCore { 
-
+class OrderConfirmationController extends OrderConfirmationControllerCore
+{
     // Do not remove empty lines below because of override has bug
-
-
-
-
 
     public function init()
     {
@@ -62,7 +58,7 @@ class OrderConfirmationController extends OrderConfirmationControllerCore {
             'HOOK_PAYMENT_RETURN' => $this->displayPaymentReturn($order),
             'order' => $presentedOrder,
             'register_form' => $register_form,
-            'customer' => $customer
+            'customer' => $customer,
         ]);
 
         if ($this->context->customer->is_guest) {

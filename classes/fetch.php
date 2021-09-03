@@ -25,24 +25,26 @@ class Fetch
     private $url;
     private $method;
     private $body;
-    private $headers = array();
+    private $headers = [];
 
     public static function detectMode()
     {
         if (is_null(self::$mode)) {
             if (function_exists('curl_init')) {
                 self::$mode = 'curl';
-            } else if (in_array(@ini_get('allow_url_fopen'), array('On', 'on', '1'))) {
+            } elseif (in_array(@ini_get('allow_url_fopen'), ['On', 'on', '1'])) {
                 self::$mode = 'fopen';
             } else {
                 self::$mode = 'none';
             }
         }
+
         return self::$mode;
     }
 
     /**
      * Fetch constructor.
+     *
      * @param $url
      * @param string $method
      * @param null $body
@@ -56,16 +58,19 @@ class Fetch
 
     /**
      * @param $method
+     *
      * @return $this
      */
     public function setMethod($method)
     {
         $this->method = strtoupper($method);
+
         return $this;
     }
 
     /**
      * @param $body
+     *
      * @return $this
      */
     public function setBody($body)
@@ -73,41 +78,46 @@ class Fetch
         if (!is_null($body)) {
             if (is_string($body)) {
                 $this->body = $body;
-            } else if (is_array($body)) {
+            } elseif (is_array($body)) {
                 $this->setHeader('Content-Type', 'application/json');
                 $this->body = json_encode($body);
             }
         } else {
             $this->body = '';
         }
+
         return $this;
     }
 
     /**
      * @param $header
      * @param $value
+     *
      * @return $this
      */
     public function setHeader($header, $value)
     {
         $this->headers[$header] = "$header: $value";
+
         return $this;
     }
 
     /**
      * @return string
+     *
      * @throws AvardaException
      */
     public function execute()
     {
         self::detectMode();
-        
+
         if (self::$mode === 'curl') {
             return $this->curl();
         }
         if (self::$mode === 'fopen') {
             return $this->fopen();
         }
+
         return false;
     }
 
@@ -117,24 +127,26 @@ class Fetch
     private function getStreamContext()
     {
         $header = implode($this->headers, "\r\n");
-        $data = array(
-            'http' => array(
+        $data = [
+            'http' => [
                 'header' => $header,
                 'method' => strtoupper($this->method),
-                'content' => $this->body
-            )
-        );
+                'content' => $this->body,
+            ],
+        ];
+
         return @stream_context_create($data);
     }
 
     /**
      * @return string
+     *
      * @throws AvardaException
      */
     public function fopen()
     {
         $responseArray = [];
-        
+
         $streamContext = $this->getStreamContext();
         $ret = @file_get_contents($this->url, false, $streamContext);
         // if API returns error, we can't get it with file_get_contents
@@ -142,7 +154,7 @@ class Fetch
             $error = error_get_last();
             throw new AvardaException($error['message']);
         }
-        
+
         if (is_array($http_response_header)) {
             //strip HTTP from the start
             $httpHeader = substr($http_response_header[0], 9);
@@ -155,7 +167,7 @@ class Fetch
 
         $responseArray = [
             'httpStatus' => $httpStatus,
-            'response' => (string)$ret, 
+            'response' => (string) $ret,
         ];
 
         return $responseArray;
@@ -163,6 +175,7 @@ class Fetch
 
     /**
      * @return string
+     *
      * @throws AvardaException
      */
     public function curl()
@@ -186,8 +199,9 @@ class Fetch
 
             $responseArray = [
                 'httpStatus' => $httpResponse,
-                'response' => (string)$res, 
+                'response' => (string) $res,
             ];
+
             return $responseArray;
         } finally {
             @curl_close($curl);

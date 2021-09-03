@@ -21,7 +21,6 @@ namespace AvardaPayments;
 
 use AvardaSession;
 use AvardaTransaction;
-use Cart;
 use Exception;
 use Order;
 use PrestaShopException;
@@ -41,6 +40,7 @@ class OrderManager
 
     /**
      * OrderManager constructor.
+     *
      * @param Api $api
      */
     public function __construct(Api $api)
@@ -50,7 +50,9 @@ class OrderManager
 
     /**
      * @param Order $order
+     *
      * @return bool
+     *
      * @throws PrestaShopException
      */
     public function isAvardaOrder(Order $order)
@@ -61,7 +63,9 @@ class OrderManager
     /**
      * @param Order $order
      * @param $amount
+     *
      * @return bool
+     *
      * @throws PrestaShopException
      */
     public function authorize(Order $order, $amount)
@@ -74,12 +78,15 @@ class OrderManager
                 $order
             );
         }
+
         return false;
     }
 
     /**
      * @param Order $order
-     * @return boolean
+     *
+     * @return bool
+     *
      * @throws Exception
      */
     public function delivery(Order $order)
@@ -94,13 +101,16 @@ class OrderManager
                 $order
             );
         }
+
         return false;
     }
 
     /**
      * @param Order $order
-     * @param double $amount
-     * @return boolean
+     * @param float $amount
+     *
+     * @return bool
+     *
      * @throws PrestaShopException
      */
     public function refund(Order $order, $amount = null)
@@ -117,14 +127,16 @@ class OrderManager
                 $order
             );
         }
+
         return false;
     }
 
     /**
      * @param Order $order
-     * @param double $amount
+     * @param float $amount
      * @param $reason
-     * @return boolean
+     *
+     * @return bool
      */
     public function returnItem(Order $order, $amount, $reason)
     {
@@ -132,22 +144,24 @@ class OrderManager
             [
                 'Amount' => $amount,
                 'Description' => $reason,
-            ]
+            ],
         ]);
     }
 
     /**
      * @param Order $order
      * @param array $items
-     * @return boolean
+     *
+     * @return bool
      */
     public function returnItems(Order $order, $items)
     {
         if ($this->canReturn($order)) {
-            $amount = array_reduce($items, function($total, $item) {
+            $amount = array_reduce($items, function ($total, $item) {
                 return $total + $item['Amount'];
             }, 0.0);
             $amount = Utils::roundPrice($amount);
+
             return $this->executeTransaction(
                 function ($purchaseId, Order $order) use ($items) {
                     return $this->api->returnItems($order->reference, $purchaseId, $items);
@@ -157,13 +171,16 @@ class OrderManager
                 $order
             );
         }
+
         return false;
     }
 
     /**
      * @param Order $order
      * @param string $reason
+     *
      * @return bool
+     *
      * @throws PrestaShopException
      */
     public function cancelPayment(Order $order, $reason = null)
@@ -174,6 +191,7 @@ class OrderManager
                     if (!$reason) {
                         $reason = 'I do not want this item anymore';
                     }
+
                     return $this->api->cancelPayment($purchaseId, $reason);
                 },
                 AvardaTransaction::TRANSACTION_CANCEL,
@@ -181,14 +199,16 @@ class OrderManager
                 $order
             );
         }
+
         return false;
     }
 
     /**
-     * @param Callable|boolean $callable
+     * @param callable|bool $callable
      * @param string $type
-     * @param double $amount
+     * @param float $amount
      * @param Order $order
+     *
      * @return bool
      */
     private function executeTransaction($callable, $type, $amount, Order $order)
@@ -198,43 +218,45 @@ class OrderManager
             $purchaseId = $this->getPurchaseId($order);
             if (is_callable($callable)) {
                 call_user_func($callable, $purchaseId, $order);
-                    // This is a callback for executable functions 
-             }
+                // This is a callback for executable functions
+            }
         } catch (Exception $e) {
             $this->error = $e instanceof AvardaException ? $e->getMessage() : $e->__toString();
         }
         $transaction = new AvardaTransaction();
-        $transaction->id_order = (int)$order->id;
+        $transaction->id_order = (int) $order->id;
         $transaction->type = $type;
         $transaction->amount = $amount;
         $transaction->success = !$this->error;
         $transaction->error_message = $this->error;
         $transaction->save();
+
         return $transaction->success;
     }
 
-
     /**
      * @param Order $order
+     *
      * @return mixed
+     *
      * @throws Exception
      */
     public function getOrderItems(Order $order)
-    { 
+    {
         $items = array_map(function ($row) {
             return [
                 'description' => Utils::maxChars($row['product_name'], 35),
                 'amount' => strval(Utils::roundPrice($row['total_price_tax_incl'])),
                 'taxAmount' => strval(Utils::roundPrice($row['total_price_tax_incl']) - Utils::roundPrice($row['total_price_tax_excl'])),
-                'quantity' => (int) $row['product_quantity'] 
+                'quantity' => (int) $row['product_quantity'],
             ];
         }, $order->getProductsDetail());
-        
+
         if ($order->total_discounts_tax_incl !== 0) {
             $items[] = [
                 'description' => 'Discount',
                 'amount' => strval(Utils::roundPrice(-1 * $order->total_discounts)),
-                'taxAmount' => strval(Utils::roundPrice(-1 * $order->total_discounts_tax_incl) - Utils::roundPrice(-1 * $order->total_discounts_tax_excl))
+                'taxAmount' => strval(Utils::roundPrice(-1 * $order->total_discounts_tax_incl) - Utils::roundPrice(-1 * $order->total_discounts_tax_excl)),
             ];
         }
 
@@ -246,18 +268,18 @@ class OrderManager
                 'quantity' => 1,
             ];
         }
-        
+
         if ($order->total_wrapping_tax_incl > 0) {
             $items[] = [
                 'description' => 'Wrapping',
                 'amount' => strval(Utils::roundPrice($order->total_wrapping_tax_incl)),
                 'taxAmount' => strval(Utils::roundPrice($order->total_wrapping_tax_incl) - Utils::roundPrice($order->total_wrapping_tax_excl)),
-                'quantity' => 1
+                'quantity' => 1,
             ];
         }
-        
+
         $total = $order->total_paid_tax_incl;
-        $totalLines = array_reduce($items, function($sum, $item) {
+        $totalLines = array_reduce($items, function ($sum, $item) {
             return $sum + $item['amount'];
         }, 0.0);
         $diff = Utils::roundPrice($total - $totalLines);
@@ -266,24 +288,27 @@ class OrderManager
                 'description' => 'adjustment',
                 'amount' => strval($diff),
                 'taxAmount' => 0,
-                'quantity' => 1
+                'quantity' => 1,
             ];
         }
-        
+
         return $items;
     }
 
     /**
      * @param Order $order
+     *
      * @return string
+     *
      * @throws AvardaException
      */
     private function getPurchaseId(Order $order)
     {
         $session = AvardaSession::getForOrder($order);
         if (!$session) {
-            throw new AvardaException("No avarda session associated with order " . (int)$order->id);
+            throw new AvardaException('No avarda session associated with order ' . (int) $order->id);
         }
+
         return $session->purchase_id;
     }
 
@@ -309,7 +334,9 @@ class OrderManager
 
     /**
      * @param Order $order
-     * @return double
+     *
+     * @return float
+     *
      * @throws PrestaShopException
      */
     public function getAuthorizedBalance(Order $order)
@@ -319,7 +346,9 @@ class OrderManager
 
     /**
      * @param Order $order
+     *
      * @return float
+     *
      * @throws PrestaShopException
      */
     public function getCapturedBalance(Order $order)
@@ -329,7 +358,9 @@ class OrderManager
 
     /**
      * @param Order $order
+     *
      * @return float
+     *
      * @throws PrestaShopException
      */
     public function getReturnedBalance(Order $order)
@@ -339,7 +370,9 @@ class OrderManager
 
     /**
      * @param Order $order
+     *
      * @return float
+     *
      * @throws PrestaShopException
      */
     public function getCanceledBalance(Order $order)
@@ -350,7 +383,9 @@ class OrderManager
     /**
      * @param Order $order
      * @param $type
+     *
      * @return float
+     *
      * @throws PrestaShopException
      */
     public function sumAmount(Order $order, $type)
@@ -363,12 +398,15 @@ class OrderManager
                 $ret += $transaction->amount;
             }
         }
+
         return $ret;
     }
 
     /**
      * @param Order $order
+     *
      * @return int
+     *
      * @throws PrestaShopException
      */
     public function getOrderStatus(Order $order)
@@ -389,12 +427,15 @@ class OrderManager
                     break;
             }
         }
+
         return $status;
     }
 
     /**
      * @param Order $order
+     *
      * @return float
+     *
      * @throws PrestaShopException
      */
     public function getRemainingBalance(Order $order)
@@ -420,6 +461,7 @@ class OrderManager
                     break;
             }
         }
+
         return $balance;
     }
 
@@ -427,6 +469,4 @@ class OrderManager
     {
         return $this->error;
     }
-
-
 }
