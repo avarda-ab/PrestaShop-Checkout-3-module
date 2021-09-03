@@ -27,6 +27,24 @@ composer install --dev
 php vendor/bin/php-cs-fixer fix
 ```
 
+## testing info
+
+Get test account from avarda (TODO: could there be a "generic" test account?)
+Test person information can be found from: https://docs.avarda.com/testing/
+And for Finland there is a special test person who is not in the above url
+
+| key | value |
+| ---- | ---- |
+| firstname | Rolf |
+| lastname | Testimies |
+| email | rolf.testimies@mailinater.com |
+| street | Testaajanpolku 17 |
+| zip | 00200 |
+| city | Helsinki |
+| socsec | 030883-925M |
+
+And for signicat validation you must use nordea and their test account `DEMOUSER3`
+
 # Releasing a new version
 
 Github action will create a new release package. For the developer the following steps must be taken:
