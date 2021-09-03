@@ -85,7 +85,7 @@
                 }
 
                 if (!error) {
-                    $.post("{$avardaCheckoutUrl}", {
+                    $.post("{$avardaCheckoutUrl nofilter}", {
                     ajax: true,
                     action: 'adduserdata',
                     zip: document.getElementById("opc-zip").value,
@@ -158,7 +158,7 @@
                     if (document.getElementById('input_gift').checked) {
                         gift = true;
                     }
-                    $.get("{$avardaCheckoutUrl}", {
+                    $.get("{$avardaCheckoutUrl nofilter}", {
                     ajax: true,
                         action: 'updatewrapping',
                         gift: gift
@@ -175,47 +175,53 @@
         {*strip*}
         <script>
             function avardaValidate() {
-                console.log('avardaValidate()');
-                try {
-                    $.post("{$avardaCheckoutUrl}", {
-                    ajax: true,
-                    action: 'validate'
+              console.log('avardaValidate()');
+              try {
+                $.post("{$avardaCheckoutUrl nofilter}", {
+                  ajax: true,
+                  action: 'validate'
                 }).done(function(response) {
-                if (response) {
+                  if (response) {
                     if (response.indexOf('http') === 0) {
-                        window.location.href = response;
+                      window.location.href = response;
                     } else if (response === 'retry') {
-                        avardaValidate();
+                      avardaValidate();
                     } else {
-                        console.error("Invalid response: ", response);
+                      console.error("Invalid response: ", response);
                     }
-                } else {
+                  } else {
                     window.location.reload(true);
-                }
-            }).fail(function(response) {
-                console.log('avardaValidate() - failed');
-            }).always(function(response) {
-                console.log('avardaValidate() - always');
-            });
-            }
-            catch (err) {
+                  }
+                }).fail(function(response) {
+                  console.log('avardaValidate() - failed');
+                }).always(function(response) {
+                  console.log('avardaValidate() - always');
+                });
+              }
+              catch (err) {
                 console.log('ERROR');
                 console.log(err);
-            }
+              }
             }
 
             function postProcessing() {
-                $.post("{$avardaCheckoutUrl}", {
+              $.post("{$avardaCheckoutUrl nofilter}", {
                 ajax: true,
                 action: 'createuser',
-            }).done(function(response) {
+              }).done(function(response) {
                 console.log('done() - response: ' + response);
                 if (response.indexOf('http') === 0) {
-                    window.location.href = response;
+                  window.location.href = response;
                 } else {
-                    avardaValidate();
+                  avardaValidate();
                 }
-            });
+              });
+            }
+
+            function setCustomerTokenCallback(customerToken) {
+              console.log('setCustomerTokenCallback called, hiding other checkout options');
+              // we are abusing this call back to hide the shipping methods so they don't confuse anymore
+              document.querySelector('#checkout-options').style.display = 'none';
             }
 
             function updateCarrier() {
@@ -225,7 +231,7 @@
                         carrier_id = item.value;
                     }
                 });
-                $.get("{$avardaCheckoutUrl}", {
+                $.get("{$avardaCheckoutUrl nofilter}", {
                 ajax: true,
                     action: 'updatecarrier',
                     idCarrier: carrier_id,
@@ -282,7 +288,7 @@
                     {if $recyclable}
                         recycle = document.getElementById('input_recyclable').checked
                     {/if}
-                    $.post("{$avardaCheckoutUrl}", {
+                    $.post("{$avardaCheckoutUrl nofilter}", {
                     ajax: true,
                         action: 'addusersettings',
                         createUser: createuser,
@@ -347,17 +353,18 @@
             window.avardaCheckoutInit({
                 "purchaseJwt": "{$avardaPurchaseToken}",
                 "rootElementId": "avarda-checkout",
-                "redirectUrl": "{$avardaCheckoutUrl}",
+                "redirectUrl": "{$avardaCheckoutUrl nofilter}",
                 "styles": {},
                 "disableFocus": true,
                 "completedPurchaseCallback": postProcessing,
                 "sessionTimedOutCallback": sessionTimedOutCallback,
                 "beforeSubmitCallback": await preProcessing,
-                "CompletedNotificationUrl": "{$paymentCallbackUrl}"
+                "CompletedNotificationUrl": "{$paymentCallbackUrl nofilter}",
+                "setCustomerTokenCallback": setCustomerTokenCallback
             });
 
             prestashop.on('updateCart', function() {
-            $.post("{$avardaCheckoutUrl}", {
+            $.post("{$avardaCheckoutUrl nofilter}", {
             ajax: true,
             action: 'updateCart'
             }).done(function(response) {
