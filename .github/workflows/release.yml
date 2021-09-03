@@ -1,0 +1,85 @@
+###
+# Tag to release
+#
+# when new tag is pushed with a version number (format v1.2.3)
+#
+# will create a new zip package into the release
+#
+# Usage:
+# do your changes and up the version number in the module
+# git push
+# git tag v1.2.3
+# git push --tags
+#
+# wait a moment
+#
+###
+name: TagToRelease
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    name: Process
+    runs-on: ubuntu-latest
+    steps:
+      # setup PHP action
+      # https://github.com/marketplace/actions/setup-php-action
+      - name: Setup PHP Action
+        uses: shivammathur/setup-php@2.9.0
+        with:
+          php-version: '7.2'
+          tools: composer
+
+      # catch the repository name, this overrides the name as the repo is named differently
+      - name: Get repository name
+        id: get_reponame
+        run: echo ::set-output name=REPONAME::avardapayments
+
+      # parse vx.x.x from the tag ref to be used later
+      # https://github.community/t/how-to-get-just-the-tag-name/16241/5
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      # checkout the code, defaults to correct tags etc automatically
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      # create zip package
+      - name: Create zip package
+        run: |
+          mkdir -p release
+          rsync -arv --exclude='release' --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='lib/autoindex/' . ./release/${{ steps.get_reponame.outputs.REPONAME }}/
+          cd release
+          zip -r ${{ steps.get_reponame.outputs.REPONAME }}-${{ steps.get_version.outputs.VERSION }}.zip ${{ steps.get_reponame.outputs.REPONAME }}
+
+      # create new release
+      # https://github.com/actions/create-release
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+
+      # upload the zip package to the release
+      # https://github.com/actions/upload-release-asset
+      - name: Upload asset to release
+        id: upload_asset_to_release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which includes a `upload_url`.
+          # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/${{ steps.get_reponame.outputs.REPONAME }}-${{ steps.get_version.outputs.VERSION }}.zip
+          asset_name: ${{ steps.get_reponame.outputs.REPONAME }}-${{ steps.get_version.outputs.VERSION }}.zip
+          asset_content_type: application/zip
