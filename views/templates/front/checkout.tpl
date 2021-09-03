@@ -54,7 +54,7 @@
                 {/block}
             </div>
         </div>
-<!--
+        <!--
         <div id="checkout-options">
             <div class="card p-2">
                 <input class="changeLanguageButton" type="button" onclick='avardaCheckout.changeLanguage("{$formLanguage}")'
@@ -99,14 +99,14 @@
             Literal tells smarty that the lines shouldn't be parsed.
             */
             {literal}
-                (function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
+            (function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
 
-                e[a].i = s;
-                i = t.createElement(n);
-                i.async = 1;
-                i.src = o + "?v=" + c + "&ts=" + 1 * new Date;
+            e[a].i = s;
+            i = t.createElement(n);
+            i.async = 1;
+            i.src = o + "?v=" + c + "&ts=" + 1 * new Date;
 
-                r = t.getElementsByTagName(n)[0];
+            r = t.getElementsByTagName(n)[0];
             {/literal}
             r.parentNode.insertBefore(i, r)
             })(window, document, "script", "avardaCheckoutInit", "avardaCheckout", "1.0.0", initUrl);

@@ -86,20 +86,20 @@
 
                 if (!error) {
                     $.post("{$avardaCheckoutUrl nofilter}", {
-                    ajax: true,
-                    action: 'adduserdata',
-                    zip: document.getElementById("opc-zip").value,
-                    email: document.getElementById("opc-email").value
-                }).done(function(response) {
-                console.log(response);
-                if (response === 'error') {
-                    console.log('error in customer email');
-                    document.getElementById("error-email").style.display = "flex";
-                } else {
-                    window.location.reload(true);
+                        ajax: true,
+                        action: 'adduserdata',
+                        zip: document.getElementById("opc-zip").value,
+                        email: document.getElementById("opc-email").value
+                    }).done(function(response) {
+                        console.log(response);
+                        if (response === 'error') {
+                            console.log('error in customer email');
+                            document.getElementById("error-email").style.display = "flex";
+                        } else {
+                            window.location.reload(true);
+                        }
+                    });
                 }
-            });
-            }
             }
         </script>
         {*/strip*}
@@ -159,12 +159,12 @@
                         gift = true;
                     }
                     $.get("{$avardaCheckoutUrl nofilter}", {
-                    ajax: true,
+                        ajax: true,
                         action: 'updatewrapping',
                         gift: gift
-                }).done(function(response) {
-                    window.location.reload(true);
-                });
+                    }).done(function(response) {
+                        window.location.reload(true);
+                    });
                 }
             </script>
         {/strip}
@@ -232,14 +232,14 @@
                     }
                 });
                 $.get("{$avardaCheckoutUrl nofilter}", {
-                ajax: true,
+                    ajax: true,
                     action: 'updatecarrier',
                     idCarrier: carrier_id,
-            }).done(function(response) {
-                window.location.hash = '#';
-                window.location.hash = '#avarda-checkout';
-                window.location.reload(true);
-            });
+                }).done(function(response) {
+                    window.location.hash = '#';
+                    window.location.hash = '#avarda-checkout';
+                    window.location.reload(true);
+                });
             }
 
             function preProcessing(payload, avardaCheckoutInstance) {
@@ -289,7 +289,7 @@
                         recycle = document.getElementById('input_recyclable').checked
                     {/if}
                     $.post("{$avardaCheckoutUrl nofilter}", {
-                    ajax: true,
+                        ajax: true,
                         action: 'addusersettings',
                         createUser: createuser,
                         optForNews: optfornews,
@@ -299,79 +299,72 @@
                         isRecycled: recycle,
                         isGift: isGift,
                         giftMsg: giftMsg
-                }).done(function(response) {
-                if (response == 'noCarrier') {
-                    document.getElementById("error-carrier").style.display = "flex";
-                    avardaCheckout.beforeSubmitAbort();
-                } else if (response == 'invalidPassword') {
-                    document.getElementById("error-pswd").style.display = "flex";
-                    avardaCheckout.beforeSubmitAbort();
+                    }).done(function(response) {
+                        if (response == 'noCarrier') {
+                            document.getElementById("error-carrier").style.display = "flex";
+                            avardaCheckout.beforeSubmitAbort();
+                        } else if (response == 'invalidPassword') {
+                            document.getElementById("error-pswd").style.display = "flex";
+                            avardaCheckout.beforeSubmitAbort();
+                        } else {
+                            avardaCheckout.beforeSubmitContinue();
+                        }
+                    });
                 } else {
-                    avardaCheckout.beforeSubmitContinue();
+                    avardaCheckout.beforeSubmitAbort();
                 }
-            });
-            }
-            else {
-                avardaCheckout.beforeSubmitAbort();
-            }
             }
 
             async function avardaBootsrap() {
                 let initUrl = ''
                 if("{$apiEnv}" === 'prod') {
-                initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
-            } else {
-                initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
-            }
+                    initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+                } else {
+                    initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+                }
 
-            /*
-    Literal tells smarty that the lines shouldn't be parsed.
-    */
-            {literal}
+                {literal}
                 (function(e,t,n,a,s,c,o,i,r){e[a]=e[a]||function(){(e[a].q=e[a].q||[]).push(arguments)};
 
-                e[a].i = s;
-                i = t.createElement(n);
-                i.async = 1;
-                i.src = o + "?v=" + c + "&ts=" + 1 * new Date;
+                    e[a].i = s;
+                    i = t.createElement(n);
+                    i.async = 1;
+                    i.src = o + "?v=" + c + "&ts=" + 1 * new Date;
 
-                r = t.getElementsByTagName(n)[0];
-            {/literal}
+                    r = t.getElementsByTagName(n)[0];
+                {/literal}
 
+                    console.log(initUrl)
+                    r.parentNode.insertBefore(i, r)
+                })(window, document, "script", "avardaCheckoutInit", "avardaCheckout", "1.0.0", initUrl);
 
+                var sessionTimedOutCallback = function(avardaCheckoutInstance) {
+                    //This is required
+                    //console.log("Session Timed Out - Handle here!")
+                };
 
-            console.log(initUrl)
-            r.parentNode.insertBefore(i, r)
-            })(window, document, "script", "avardaCheckoutInit", "avardaCheckout", "1.0.0", initUrl);
+                window.avardaCheckoutInit({
+                    "purchaseJwt": "{$avardaPurchaseToken}",
+                    "rootElementId": "avarda-checkout",
+                    "redirectUrl": "{$avardaCheckoutUrl nofilter}",
+                    "styles": {},
+                    "disableFocus": true,
+                    "completedPurchaseCallback": postProcessing,
+                    "sessionTimedOutCallback": sessionTimedOutCallback,
+                    "beforeSubmitCallback": await preProcessing,
+                    "CompletedNotificationUrl": "{$paymentCallbackUrl nofilter}",
+                    "setCustomerTokenCallback": setCustomerTokenCallback
+                });
 
-            var sessionTimedOutCallback = function(avardaCheckoutInstance) {
-                //This is required
-                //console.log("Session Timed Out - Handle here!")
-            };
-
-
-            window.avardaCheckoutInit({
-                "purchaseJwt": "{$avardaPurchaseToken}",
-                "rootElementId": "avarda-checkout",
-                "redirectUrl": "{$avardaCheckoutUrl nofilter}",
-                "styles": {},
-                "disableFocus": true,
-                "completedPurchaseCallback": postProcessing,
-                "sessionTimedOutCallback": sessionTimedOutCallback,
-                "beforeSubmitCallback": await preProcessing,
-                "CompletedNotificationUrl": "{$paymentCallbackUrl nofilter}",
-                "setCustomerTokenCallback": setCustomerTokenCallback
-            });
-
-            prestashop.on('updateCart', function() {
-            $.post("{$avardaCheckoutUrl nofilter}", {
-            ajax: true,
-            action: 'updateCart'
-            }).done(function(response) {
-            window.avardaCheckout.refreshForm();
-            window.location.reload(true);
-            });
-            });
+                prestashop.on('updateCart', function() {
+                    $.post("{$avardaCheckoutUrl nofilter}", {
+                        ajax: true,
+                        action: 'updateCart'
+                    }).done(function(response) {
+                        window.avardaCheckout.refreshForm();
+                        window.location.reload(true);
+                    });
+                });
             }
 
             if (document.readyState === 'complete') {
