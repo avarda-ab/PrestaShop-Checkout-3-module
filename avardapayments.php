@@ -296,6 +296,7 @@ class AvardaPayments extends PaymentModule
 
         $logoUrl = null;
         try {
+            // TODO: this requires refactoring. This just goes through the folder and gets one of the images
             $logoDir = _PS_MODULE_DIR_ . $this->name . '/uploads';
             $logo = null;
             foreach (new DirectoryIterator($logoDir) as $file) {
@@ -308,8 +309,8 @@ class AvardaPayments extends PaymentModule
                 $logoUrl = _MODULE_DIR_ . $this->name . '/uploads/' . $logo;
             }
         } catch (Exception $e) {
-            // TODO: log me
-            // print $e->getMessage();
+            // there is no point on spamming the log with this
+            //PrestaShopLogger::addLog('avardapayments - hookPaymentOptions image loading failed: ' . $e->getMessage(), 2);
         }
         $this->smarty->assign('logoUrl', $logoUrl);
 
