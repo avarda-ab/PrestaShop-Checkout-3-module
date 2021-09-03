@@ -57,7 +57,7 @@ class Settings
                     'password' => '',
                 ],
             ],
-            'showCart' => true,
+            'showCart' => false,
             'completedStatus' => 2,
             'deliveryStatus' => 5,
             'useOnePage' => 0,
