@@ -293,21 +293,32 @@ class AvardaPayments extends PaymentModule
         // Looks weird but we need to parse new line from json to enter to make css pre-line work.
         $parsedModuleDescription = str_replace('\n', '
         ', $moduleDescription);
-        $logoDir = _PS_MODULE_DIR_ . $this->name . '/uploads';
-        foreach (new DirectoryIterator($logoDir) as $file) {
-            if ($file->isDot()) {
-                continue;
-            }
-            $logo = $file->getFilename();
-        }
 
-        $logoUrl = _MODULE_DIR_ . $this->name . '/uploads/' . $logo;
+        $logoUrl = null;
+        try {
+            $logoDir = _PS_MODULE_DIR_ . $this->name . '/uploads';
+            $logo = null;
+            foreach (new DirectoryIterator($logoDir) as $file) {
+                if ($file->isDot()) {
+                    continue;
+                }
+                $logo = $file->getFilename();
+            }
+            if($logo) {
+                $logoUrl = _MODULE_DIR_ . $this->name . '/uploads/' . $logo;
+            }
+        } catch (Exception $e) {
+            // TODO: log me
+            // print $e->getMessage();
+        }
         $this->smarty->assign('logoUrl', $logoUrl);
+
         $this->smarty->assign('description', $parsedModuleDescription);
         $option = new PaymentOption();
         $option->setCallToActionText($moduleName)
             ->setAction($this->context->link->getModuleLink($this->name, 'checkout', [], true))
-            ->setAdditionalInformation($this->display(__FILE__, 'views/templates/hook/payment-option.tpl'));
+            ->setAdditionalInformation($this->display(__FILE__, 'views/templates/hook/payment-option.tpl'))
+            ->setLogo(null);
 
         return [
             $option,
