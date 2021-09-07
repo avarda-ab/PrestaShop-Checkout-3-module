@@ -1,102 +1,135 @@
 #avarda-checkout {
-    margin-bottom: 3em;
+  margin-bottom: 3em;
 }
 
-/*
-body#module-avardapayments-checkout #header .header-nav {
-    max-height: none;
-    padding: 5rem 0 .9375rem;
-    border: none;
-    margin-bottom: 0;
-    box-shadow: 2px 2px 8px 0 rgba(0,0,0,.2);
+#module-avardapayments-opcheckout #header .header-nav {
+  max-height: none;
+  padding: 15px 0;
+  border: none;
+  margin-bottom: 0;
 }
-*/
+
+#module-avardapayments-opcheckout #header .header-nav #_desktop_contact_link #contact-link {
+  margin-top: 0;
+}
+
+#module-avardapayments-opcheckout .delivery-options-list,
+#module-avardapayments-opcheckout #checkout-options .container-checkbox {
+  max-width: 550px;
+  margin: 0 auto;
+}
+
+#module-avardapayments-opcheckout #checkout-options .container-checkbox>label,
+#module-avardapayments-opcheckout #checkout-options .container-checkbox>input {
+  cursor: pointer;
+}
+
+#module-avardapayments-opcheckout .delivery-options-list .delivery-option {
+  border: 1px solid #b2b2b2;
+  -webkit-transition: 100ms ease-in-out;
+  -o-transition: 100ms ease-in-out;
+  transition: 100ms ease-in-out;
+}
+
+#module-avardapayments-opcheckout .delivery-options-list .delivery-option:hover {
+  border: 1px solid black;
+}
+
+#module-avardapayments-opcheckout .delivery-options-list .delivery-option>div,
+#module-avardapayments-opcheckout .delivery-options-list .delivery-option>label {
+  cursor: pointer;
+}
+
+#module-avardapayments-opcheckout #checkout-options .card h1.title {
+  text-align: center;
+  text-transform: capitalize;
+  font-family: inherit;
+  font-size: 20px;
+  line-height: 22px;
+  font-weight: 700;
+}
+
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .products,
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .delivery-options .delivery-option {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background: white;
+}
+
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .delivery-options label,
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .order-options label {
+  text-align: left;
+}
+
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .delivery-options .delivery-option .col-sm-1,
+#module-avardapayments-opcheckout #checkout-options .card .delivery-options-list .delivery-options .delivery-option .carriere-name-container {
+  padding: 0;
+}
 
 input.cb-createuser, input.cb-optfornews {
-    /* Double-sized Checkboxes */
-    -ms-transform: scale(1.5); /* IE */
-    -moz-transform: scale(1.5); /* FF */
-    -webkit-transform: scale(1.5); /* Safari and Chrome */
-    -o-transform: scale(1.5); /* Opera */
-    transform: scale(1.5);
+  /* Double-sized Checkboxes */
+  -ms-transform: scale(1.5);
+  /* IE */
+  /* FF */
+  -webkit-transform: scale(1.5);
+  /* Safari and Chrome */
+  /* Opera */
+  transform: scale(1.5);
 }
 
 label.user-label, label.news-label {
-    padding-left: 10px;
-    font-size: 1rem;
+  padding-left: 10px;
+  font-size: 1rem;
 }
 
 label.label-help {
-    padding-left: 10px;
+  padding-left: 10px;
 }
 
 label.error {
-    color: #ff0033;
-    display: none;
+  color: #ff0033;
+  display: none;
 }
 
 .container-checkbox, .container-radio {
-    padding-top: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 .container-textarea {
-    padding: 1rem 0;
+  padding: 1rem 0;
 }
 
 h1.title {
-    margin: 1rem 0;
+  margin: 1rem 0;
 }
 
 .carriere-name-container, .carrier-name {
-    text-align: start;
+  text-align: start;
 }
 
 .w-100 {
-    width: 100%;
+  width: 100%;
 }
 
 .align-items-center {
-    display: flex;
-    align-items: center;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
 }
 
 .carrier {
-    padding-bottom: 10px;
+  padding-bottom: 10px;
 }
 
 textarea {
-    max-width: 100%;
-}
-
-
-
-.changeLanguageButton:hover {
-    background-color: #90EE90;
-    border-color: #008000;
-    color: #ffffff;
-}
-
-.changeLanguageButton {
-    cursor: pointer;
-    touch-action: manipulation;
-    white-space: normal;
-    font-family: inherit;
-    text-transform: none;
-    background-color: #32CD32;
-    border-color: #008000;
-    color: #ffffff;
-    border-width: 1px;
-    /* border-style: solid; *
-    /* min-height: 50px; */
-    font-size: 1rem;
-    padding-left: 1.5;
-    font-weight: 700;
-    /* line-height: 24px; */
-    border-radius: 5px;
-    /* box-shadow: 0px 0px 0px 0px #000000; */
-    /* padding: 10px 16px 10px 16px; */
-}
-
-body#module-avardapayments-opcheckout .delivery-options-list .delivery-option {
-    border: 1px solid #eee;
+  max-width: 100%;
 }
