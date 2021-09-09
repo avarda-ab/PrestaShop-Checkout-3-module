@@ -2,7 +2,8 @@
   margin-bottom: 3em;
 }
 
-#module-avardapayments-opcheckout #header .header-nav {
+#module-avardapayments-opcheckout #header .header-nav, 
+#module-avardapayments-checkout #header .header-nav {
   max-height: none;
   padding: 15px 0;
   border: none;
