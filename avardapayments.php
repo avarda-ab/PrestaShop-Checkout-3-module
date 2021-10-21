@@ -38,7 +38,7 @@ class AvardaPayments extends PaymentModule
     {
         $this->name = 'avardapayments';
         $this->tab = 'payments_gateways';
-        $this->version = '3.1.0';
+        $this->version = '3.1.1';
         $this->author = 'DataKick, Loiki';
         $this->need_instance = 0;
         $this->bootstrap = true;

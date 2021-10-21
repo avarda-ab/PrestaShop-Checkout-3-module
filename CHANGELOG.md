@@ -1,3 +1,9 @@
+20211020 - oliver-avarda
+========
+* Edited changelog
+* Changed version number to 3.1.1 for next release
+
+
 20210903 - tswfi
 ========
 * Started changelog
