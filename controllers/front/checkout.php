@@ -18,11 +18,11 @@
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
-use PrestaShop\PrestaShop\Adapter\Cart\CartPresenter;
-use PrestaShop\PrestaShop\Core\Crypto\Hashing;
 use AvardaPayments\Api;
 use AvardaPayments\AvardaException;
 use AvardaPayments\Utils;
+use PrestaShop\PrestaShop\Adapter\Cart\CartPresenter;
+use PrestaShop\PrestaShop\Core\Crypto\Hashing;
 
 class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 {
@@ -56,10 +56,10 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 $customerID = $this->createDummyGuestCustomer($cart);
             }
             $session = AvardaSession::getForCart($cart, $mode);
-            
+
             $session->error_message = '';
             $errorFromRequest = $this->processRequest($session, $cart);
-            if(!empty($errorFromRequest)) {
+            if (!empty($errorFromRequest)) {
                 $this->setError($this->module->l('An error occurred with Avarda service'));
                 $session->error_message = $errorFromRequest->__toString();
                 $session->save();
@@ -78,7 +78,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             'apiErrorMsg' => $session->error_message,
             'showCart' => $settings->showCart(),
             'formLanguage' => $this->getApi()->getLanguageById($cookie->id_lang),
-						'apiEnv' => $this->getApi()->getApiEnv(),
+                        'apiEnv' => $this->getApi()->getApiEnv(),
         ]);
         $this->setTemplate('module:avardapayments/views/templates/front/checkout.tpl');
     }
@@ -86,6 +86,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
     /**
      * @param AvardaSession $session
      * @param Cart $cart
+     *
      * @throws AvardaException
      * @throws Exception
      */
@@ -100,18 +101,17 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $cartSignature = Utils::getCartInfoSignature($cartInfo);
             // get customer info
             $customerInfo = Utils::getCustomerInfo($cart);
-           
-            $utcTimeNow = new \DateTime("now", new \DateTimeZone("UTC"));
+
+            $utcTimeNow = new \DateTime('now', new \DateTimeZone('UTC'));
             $utcTimeMinus30 = $utcTimeNow->modify('-30 minutes');
             $utcTimeNowString = $utcTimeMinus30->format('Y-m-d H:i:s');
 
             // initialize sessions if necesseary
             if (empty($session->purchase_id)) {
-
                 $info = json_decode($session->info);
                 // if we are using ghost account, do not create purchase id
-                if(($customerInfo && $customerInfo['Mail'] != $this->dummyEmail) || ($info && isset($info->Mail))) {
-                    if($customerInfo['Mail'] == $this->dummyEmail) {
+                if (($customerInfo && $customerInfo['Mail'] != $this->dummyEmail) || ($info && isset($info->Mail))) {
+                    if ($customerInfo['Mail'] == $this->dummyEmail) {
                         $customerInfo['Mail'] = $info->Mail;
                     }
                     // filter address data
@@ -119,16 +119,16 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                     // add filtered customer data into info
                     $info = array_merge($cartInfo, $customerInfo);
                     $dataArr = $this->getApi()->initializePayment($info);
-                    $data = json_decode(json_encode($dataArr), FALSE);
+                    $data = json_decode(json_encode($dataArr), false);
 
                     $purchaseToken = $data->jwt;
                     $purchaseId = $data->purchaseId;
                     $expireTimestamp = $data->expiredUtc;
- 
+
                     $session->purchase_id = $purchaseId;
                     $session->purchase_token = $purchaseToken;
                     $session->cart_signature = $cartSignature;
-        
+
                     $session->purchase_expire_timestamp = $expireTimestamp;
                     $session->status = 'processing';
                 } else {
@@ -138,23 +138,22 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 }
 
                 $session->save();
-                
-                // Purchase is expired if less than (now - 30) minutes
-            } else if (!empty($session->purchase_id) && $session->purchase_expire_timestamp < $utcTimeNowString) {
+
+            // Purchase is expired if less than (now - 30) minutes
+            } elseif (!empty($session->purchase_id) && $session->purchase_expire_timestamp < $utcTimeNowString) {
                 $this->updatePurchaseSession($session);
             }
 
             // update session items if cart signature changes
             if ($session->cart_signature !== $cartSignature && !empty($session->purchase_id)) {
-                
                 $itemsArray = [
                     'items' => $cartInfo['items'],
                 ];
                 $this->getApi()->updateItems($session->purchase_id, $itemsArray);
                 $session->cart_signature = $cartSignature;
-                
+
                 //If user removes products during checkout set purchase id to blank
-                if(empty($session->purchase_id)) {
+                if (empty($session->purchase_id)) {
                     $session->purchase_id = '';
                     $session->purchase_token = '';
                     $session->purchase_expire_timestamp = '';
@@ -164,7 +163,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
             // process ajax calls
             if (Tools::getValue('ajax') && Tools::getValue('action')) {
-                die($this->processAjax($session, Tools::getValue('action'), Tools::getAllValues()));
+                exit($this->processAjax($session, Tools::getValue('action'), Tools::getAllValues()));
             }
 
             // render checkout page
@@ -179,7 +178,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             ]);
             $this->renderCart();
             $this->setTemplate('module:avardapayments/views/templates/front/checkout.tpl');
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Logger::addLog('processRequest(): error - ' . $e, 3, null, null, null, true);
             $error = $e;
         }
@@ -187,13 +186,14 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         return $error;
     }
 
-    public function updatePurchaseSession($session) {
+    public function updatePurchaseSession($session)
+    {
         $newJwtArr = $this->getApi()->execute('/api/partner/payments/' . $session->purchase_id . '/token', $session->purchase_id, 'GET', 'reclaimPurchaseToken()');
 
-        $data = json_decode(json_encode($newJwtArr), FALSE);
+        $data = json_decode(json_encode($newJwtArr), false);
         $session->purchase_token = $data->jwt;
 
-        $utcTimeStampNow = new \DateTime("now", new \DateTimeZone("UTC"));
+        $utcTimeStampNow = new \DateTime('now', new \DateTimeZone('UTC'));
         $utcTimePlus30 = $utcTimeStampNow->modify('+30 minutes');
         $formattedNewTimestamp = $utcTimePlus30->format('Y-m-d H:i:s');
         $session->purchase_expire_timestamp = $formattedNewTimestamp;
@@ -203,7 +203,9 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
     /**
      * @param AvardaSession $session
      * @param string $action
+     *
      * @return mixed
+     *
      * @throws AvardaException
      * @throws PrestaShopException
      */
@@ -216,12 +218,12 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         if ($action === 'updateCart') {
             $cart = new Cart($session->id_cart);
             $deliveryDescription = $this->module->l('Delivery cost (Including taxes)');
-            
+
             $cartInfo = Utils::getCartInfo($cart, $deliveryDescription);
             $itemsArray = [
                 'items' => $cartInfo['items'],
             ];
-    
+
             return $this->getApi()->updateItems($session->purchase_id, $itemsArray);
         }
 
@@ -237,6 +239,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 return $this->validatePayment($session);
             } catch (Exception $e) {
                 Logger::addLog('processAjax(): Validate error: ' . $e, 1, null, null, null, true);
+
                 return 'validateFailed';
             }
         }
@@ -245,21 +248,22 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             return $this->updateCustomerInfo($session, $params);
         }
         if ($action === 'createuser') {
-					try {
-							$created = $this->createCustomer($session, $params);
-							if($created) {
-									return $this->validatePayment($session);
-							}
-						} catch(Exception $e) {
-							if(strpos($e, 'Notice: Undefined offset:') || strpos($e, 'Notice: Undefined variable: order')) {
-							//do nothing here, go to confirmation page
-							} else {
-								Logger::addLog('processAjax(): createcustomer / validatepayment error: ' . $e, 1, null, null, null, true);
-							}	
-						}
+            try {
+                $created = $this->createCustomer($session, $params);
+                if ($created) {
+                    return $this->validatePayment($session);
+                }
+            } catch (Exception $e) {
+                if (strpos($e, 'Notice: Undefined offset:') || strpos($e, 'Notice: Undefined variable: order')) {
+                    //do nothing here, go to confirmation page
+                } else {
+                    Logger::addLog('processAjax(): createcustomer / validatepayment error: ' . $e, 1, null, null, null, true);
+                }
+            }
         }
         if ($action === 'compareuser') {
             $this->compareCustomer($session);
+
             return true;
         }
         if ($action === 'addusersettings') {
@@ -269,20 +273,21 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         return false;
     }
 
-    protected function addSessionSettings($session, $params) {
+    protected function addSessionSettings($session, $params)
+    {
         // init return value indicators
         $hasCarrier = true;
         $validPassword = true;
 
-        if($params['createUser'] == 'true') {
+        if ($params['createUser'] == 'true') {
             $session->create_customer = 1;
-            if($params['pswd']) {
+            if ($params['pswd']) {
                 // check if password is valid
-                if(Validate::isPlaintextPassword($params['pswd'])) {
+                if (Validate::isPlaintextPassword($params['pswd'])) {
                     // password is valid, hash it
                     $crypto = new Hashing();
                     $session->passwd = $crypto->hash($params['pswd']);
-                    if(!Validate::isHashedPassword($session->passwd)) {
+                    if (!Validate::isHashedPassword($session->passwd)) {
                         // something went wrong with hashing - do not accept the password
                         $validPassword = false;
                     }
@@ -294,16 +299,16 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $session->create_customer = 0;
         }
 
-        if($params['optForNews'] == 'true') {
+        if ($params['optForNews'] == 'true') {
             $session->newsletter = 1;
         } else {
             $session->newsletter = 0;
         }
         $cart = new Cart($session->id_cart);
         $carriers = $this->getShippingOptionIDs($cart);
-        if($carriers) {
+        if ($carriers) {
             $carrier = htmlspecialchars($params['idCarrier']);
-            if(in_array($carrier, $carriers)) {
+            if (in_array($carrier, $carriers)) {
                 $session->id_carrier = $params['idCarrier'];
             } else {
                 $hasCarrier = false;
@@ -312,18 +317,18 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $hasCarrier = false;
         }
 
-        if($params['orderMsg']) {
+        if ($params['orderMsg']) {
             $order_message = trim(htmlspecialchars(strip_tags($params['orderMsg'])));
             $session->order_message = $params['orderMsg'];
         }
 
-        if((int) Configuration::get('PS_GIFT_WRAPPING')) {
+        if ((int) Configuration::get('PS_GIFT_WRAPPING')) {
             // shop supports gifting
             // check if order is gift
-            if($params['isGift'] == 'true') {
+            if ($params['isGift'] == 'true') {
                 $session->is_gift = 1;
                 // add gift message if it has one
-                if($params['giftMsg']) {
+                if ($params['giftMsg']) {
                     $gift_message = trim(htmlspecialchars(strip_tags($params['giftMsg'])));
                     $session->gift_message = $gift_message;
                 }
@@ -332,10 +337,10 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             }
         }
 
-        if((int) Configuration::get('PS_RECYCLABLE_PACK')) {
+        if ((int) Configuration::get('PS_RECYCLABLE_PACK')) {
             // shop supports recycled packaging
             // check if recycling is checked
-            if($params['isRecycled'] == 'true') {
+            if ($params['isRecycled'] == 'true') {
                 $session->is_recycled = 1;
             } else {
                 $session->is_recycled = 0;
@@ -344,55 +349,57 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
         $session->save();
 
-        if(!$hasCarrier) {
+        if (!$hasCarrier) {
             return 'noCarrier';
-        } else if (!$validPassword) {
-            return 'invalidPassword';  
+        } elseif (!$validPassword) {
+            return 'invalidPassword';
         } else {
             return true;
         }
     }
 
-    protected function filterDummyCustomerData(Customer $customer) {
+    protected function filterDummyCustomerData(Customer $customer)
+    {
         // filter dummy customer data
-        if($customer->firstname == $this->dummyFirst) {
+        if ($customer->firstname == $this->dummyFirst) {
             $customer->firstname = '';
         }
-        if($customer->lastname == $this->dummyLast) {
+        if ($customer->lastname == $this->dummyLast) {
             $customer->lastname = '';
         }
-        if($customer->firstname == $this->dummyFirst) {
+        if ($customer->firstname == $this->dummyFirst) {
             $customer->firstname = '';
         }
         $address = $customer->addresses[0];
-        
+
         return $customer;
     }
-    
-    protected function filterDummyAddressData($customerInfo) {
+
+    protected function filterDummyAddressData($customerInfo)
+    {
         try {
-            if(!empty($customerInfo)) {
+            if (!empty($customerInfo)) {
                 $prefixes = ['Delivery', 'Invoicing'];
-                foreach($prefixes as $prefix) {
+                foreach ($prefixes as $prefix) {
                     // filter address data by clearing it if it matches dummy data
-                    if($customerInfo[$prefix . 'FirstName'] == $this->dummyFirst) {
+                    if ($customerInfo[$prefix . 'FirstName'] == $this->dummyFirst) {
                         $customerInfo[$prefix . 'FirstName'] = '';
                     }
-                    if($customerInfo[$prefix . 'LastName'] == $this->dummyLast) {
+                    if ($customerInfo[$prefix . 'LastName'] == $this->dummyLast) {
                         $customerInfo[$prefix . 'LastName'] = '';
                     }
-                    if($customerInfo[$prefix . 'AddressLine1'] == $this->dummyAddress) {
+                    if ($customerInfo[$prefix . 'AddressLine1'] == $this->dummyAddress) {
                         $customerInfo[$prefix . 'AddressLine1'] = '';
                     }
-                    if($customerInfo[$prefix . 'Zip'] == $this->dummyPostcode) {
+                    if ($customerInfo[$prefix . 'Zip'] == $this->dummyPostcode) {
                         $customerInfo[$prefix . 'Zip'] = '';
                     }
-                    if($customerInfo[$prefix . 'City'] == $this->dummyCity) {
+                    if ($customerInfo[$prefix . 'City'] == $this->dummyCity) {
                         $customerInfo[$prefix . 'City'] = '';
                     }
                 }
             }
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Logger::addLog('filterDummyAddressData(): error - ' . $e, 3, null, null, null, true);
         }
         // Do we have to return empty customerInfo here?
@@ -402,24 +409,25 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
     /**
      * update customer info into context
+     *
      * @param Customer customer which is added to context
      * @param login whether to log in updated customer
      */
-
-    protected function updateCustomerContext(Customer $customer, $login = false) {
+    protected function updateCustomerContext(Customer $customer, $login = false)
+    {
         $context = Context::getContext();
         $context->customer = $customer;
         $context->cookie->id_customer = (int) $customer->id;
         $context->cookie->customer_lastname = $customer->lastname;
         $context->cookie->customer_firstname = $customer->firstname;
         $context->cookie->passwd = $customer->passwd;
-        if($login) {
+        if ($login) {
             $context->cookie->logged = 1;
             $customer->logged = 1;
         } else {
             $context->cookie->logged = 0;
             $customer->logged = 0;
-            if($customer->email != $this->dummyEmail) {
+            if ($customer->email != $this->dummyEmail) {
                 $context->customer->logout();
             }
         }
@@ -436,8 +444,8 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         $context->cart->autosetProductAddress();
     }
 
-    protected function updateCustomerInfo($session, $params) {
-        
+    protected function updateCustomerInfo($session, $params)
+    {
         // init return value
         $updated = false;
         // init result checkers
@@ -449,8 +457,8 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
         // get customer from cart
         $customer_id = $cart->id_customer;
-        
-        if($customer_id) {
+
+        if ($customer_id) {
             $info = json_decode($session->info);
             $info['Mail'] = $params['email'];
             $session->info = json_encode($info);
@@ -459,11 +467,11 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             // update ghost customer with given info
             // get customer address
             $address_id = Address::getFirstCustomerAddressId($customer_id);
-            if($address_id) {
+            if ($address_id) {
                 // update postcode to address
                 $address = new Address($address_id);
                 $address->postcode = $params['zip'];
-                if($address->update()) {
+                if ($address->update()) {
                     $updatedAddress = true;
                 } else {
                     Logger::addLog('updateCustomerInfo(): address update failed', 3, null, null, null, true);
@@ -475,14 +483,15 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             Logger::addLog('updateCustomerInfo(): customer id not found', 3, null, null, null, true);
         }
 
-        if($updatedCustomer && $updatedAddress) {
+        if ($updatedCustomer && $updatedAddress) {
             $updated = true;
         }
 
         return $updated;
     }
 
-    protected function updateAddressInfo($customer, $addressId, $addressInfo) {
+    protected function updateAddressInfo($customer, $addressId, $addressInfo)
+    {
         $addressId = (int) $addressId;
         $address = new Address($addressId);
         $addresses = $customer->getSimpleAddresses();
@@ -498,8 +507,10 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
     /**
      * @param AvardaSession $session
+     *
      * @throws AvardaException
      * @throws PrestaShopException
+     *
      * @return string
      */
     public function validatePayment(AvardaSession $session)
@@ -512,9 +523,9 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             }
 
             $info = $this->getApi()->getPaymentInfo($session->purchase_id);
-            $jsonInfo = json_decode(json_encode($info), FALSE);
+            $jsonInfo = json_decode(json_encode($info), false);
 
-            if($jsonInfo->mode === "B2C") {
+            if ($jsonInfo->mode === 'B2C') {
                 $purchaseMode = 'B2C';
                 $mode = $jsonInfo->b2C;
             } else {
@@ -532,23 +543,23 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $session->save();
 
             $state = $step->current;
-            
+
             if ($state !== Api::STATUS_COMPLETED) {
-                throw new AvardaException("Payment validation failed: invalid status " . $state);
+                throw new AvardaException('Payment validation failed: invalid status ' . $state);
             }
 
             $invoiceAddressInfo = Utils::extractAddressInfo('invoicingAddress', $checkoutSite, $mode, $purchaseMode);
             $deliverAddressInfo = Utils::extractAddressInfo('deliveryAddress', $checkoutSite, $mode, $purchaseMode);
 
             // Checking the delivery address. If null values, the invoice address is used as delivery address.
-            if (! Utils::validAddressInfo($deliverAddressInfo)) {
+            if (!Utils::validAddressInfo($deliverAddressInfo)) {
                 $deliverAddressInfo = $invoiceAddressInfo;
             }
 
             // check if an user exists with given email
             $oldCustomerID = Customer::customerExists($email, true, false);
 
-            if($oldCustomerID) {
+            if ($oldCustomerID) {
                 $this->connectToOldCustomer($oldCustomerID, $session, $cart);
                 $customer = new Customer($oldCustomerID);
             } else {
@@ -556,7 +567,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 $customer = new Customer($customer_id);
             }
 
-            if (! Validate::isLoadedObject($customer)) {
+            if (!Validate::isLoadedObject($customer)) {
                 throw new AvardaException('No customer associated with cart');
             }
 
@@ -567,7 +578,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 Db::getInstance()->execute('UPDATE `' . _DB_PREFIX_ . 'cart_product` SET `id_address_delivery` = ' . $newDeliveryId . ' WHERE  `id_cart` = ' . $cart->id . ' AND `id_address_delivery` = ' . $cart->id_address_delivery);
                 Db::getInstance()->execute('UPDATE `' . _DB_PREFIX_ . 'customization` SET `id_address_delivery` = ' . $newDeliveryId . ' WHERE  `id_cart` = ' . $cart->id . ' AND `id_address_delivery` = ' . $cart->id_address_delivery);
                 $cart->id_address_delivery = $newDeliveryId;
-                $cart->delivery_option = json_encode(array($cart->id_address_delivery => $cart->id_carrier . ','));
+                $cart->delivery_option = json_encode([$cart->id_address_delivery => $cart->id_carrier . ',']);
                 $update = true;
             }
 
@@ -585,7 +596,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             }
 
             $amountPaid = $jsonInfo->totalPrice;
-            $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+            $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
             if ($amountPaid > $total + 0.10 || $amountPaid < $total - 0.10) {
                 $total = $amountPaid;
             }
@@ -593,10 +604,10 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $settings = $this->module->getSettings();
             // validate order
             $this->module->validateOrder(
-                (int)$cart->id,
-                (int)$settings->getCompletedStatus(),
+                (int) $cart->id,
+                (int) $settings->getCompletedStatus(),
                 $total,
-                'Avarda: '. $jsonInfo->paymentMethods->selectedPayment->type,
+                'Avarda: ' . $jsonInfo->paymentMethods->selectedPayment->type,
                 $this->module->l('Payment accepted'),
                 ['transaction_id' => $session->purchase_id],
                 $cart->id_currency,
@@ -606,31 +617,31 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
             // update session
             $session->status = 'completed';
-            $session->id_order = (int)$this->module->currentOrder;
+            $session->id_order = (int) $this->module->currentOrder;
             $session->save();
 
-						//add order reference to Avarda
-						$response = $this->getApi()->putExtraIdentifiers($this->module->currentOrderReference, $session->purchase_id);
+            //add order reference to Avarda
+            $response = $this->getApi()->putExtraIdentifiers($this->module->currentOrderReference, $session->purchase_id);
 
-            $order = new Order((int)$this->module->currentOrder);
+            $order = new Order((int) $this->module->currentOrder);
 
             $orderManager = $this->module->getOrderManager();
             $orderManager->authorize($order, $total);
- 
+
             if ($settings->getDeliveryStatus() === $settings->getCompletedStatus()) {
                 $orderManager->delivery($order);
             }
-            
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             //TODO: comment this quickfix out when debugging and find out how to match the delivery_option from DB with prestashop delivery_option_list to fix this error
-            if(strpos($e, 'Notice: Undefined offset:') || strpos($e, 'Notice: Undefined variable: order')) {
+            if (strpos($e, 'Notice: Undefined offset:') || strpos($e, 'Notice: Undefined variable: order')) {
                 //do nothing here, go to confirmation page
             } else {
                 Logger::addLog('validatePayment(): error - ' . $e, 3, null, null, null, true);
+
                 return false;
             }
         }
-        
+
         // redirect to confirmation page
         return Context::getContext()->link->getPageLink(
             'order-confirmation',
@@ -648,14 +659,16 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
      * @param Customer $customer
      * @param $addressId
      * @param $addressInfo
+     *
      * @return int
+     *
      * @throws PrestaShopException
      */
     protected function resolveAddress(Customer $customer, $addressId, $addressInfo)
     {
-        $addressId = (int)$addressId;
+        $addressId = (int) $addressId;
 
-        if (! Utils::validAddressInfo($addressInfo)) {
+        if (!Utils::validAddressInfo($addressInfo)) {
             return $addressId;
         }
 
@@ -669,7 +682,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         // check existing addresses
         foreach ($addresses as $id => $address) {
             if (Utils::addressMatches($address, $addressInfo)) {
-                return (int)$id;
+                return (int) $id;
             }
         }
 
@@ -681,11 +694,13 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $address->{$key} = $value;
         }
         $address->save();
-        return (int)$address->id;
+
+        return (int) $address->id;
     }
 
     /**
      * @param $error
+     *
      * @throws Exception
      */
     protected function setError($error)
@@ -704,15 +719,17 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
     /**
      * @param Cart $cart
+     *
      * @return bool
      */
     protected static function validCart($cart)
     {
-        return ($cart && $cart->nbProducts() > 0);
+        return $cart && $cart->nbProducts() > 0;
     }
 
     /**
      * @return Api
+     *
      * @throws AvardaException
      */
     protected function getApi()
@@ -732,10 +749,11 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         */
     }
 
-    protected function getShippingOptions($cart, $address) {
-        $shippingOptions = array();
+    protected function getShippingOptions($cart, $address)
+    {
+        $shippingOptions = [];
         $useDefault = true;
-        if($cart->id_carrier) {
+        if ($cart->id_carrier) {
             $useDefault = false;
         }
         if (static::validCart($cart)) {
@@ -743,7 +761,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 foreach ($carriers as $carrier) {
                     foreach ($carrier['carrier_list'] as $carrierOption) {
                         $carrierObject = $carrierOption['instance'];
-                        $shippingOption = array();
+                        $shippingOption = [];
                         $shippingOption['logo'] = $carrierOption['logo'];
                         $shippingOption['id'] = $carrierObject->id;
                         if (($cart->id_carrier == $carrierObject->id && !$useDefault) || ($carrierObject->id == (int) Configuration::get('PS_CARRIER_DEFAULT') && $useDefault)) {
@@ -752,12 +770,12 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                             $shippingOption['preselected'] = false;
                         }
                         $shippingOption['name'] = $carrierObject->name;
-                        $shippingOption['delay'] = $carrierObject->delay[(int)$cart->id_lang];
+                        $shippingOption['delay'] = $carrierObject->delay[(int) $cart->id_lang];
                         $shippingOption['price'] = $carrier['total_price_with_tax'];
                         $taxAmount = (($carrier['total_price_with_tax'] - $carrier['total_price_without_tax']));
                         $shippingOption['tax_amount'] = $taxAmount;
                         $shipping_tax_rate = $carrierObject->getTaxesRate($address);
-                        $shippingOption['tax_rate'] = $shipping_tax_rate*100;
+                        $shippingOption['tax_rate'] = $shipping_tax_rate * 100;
                         $shippingOptions[] = $shippingOption;
                     }
                 }
@@ -767,8 +785,9 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         return $shippingOptions;
     }
 
-    protected function getShippingOptionIDs($cart) {
-        $shippingOptions = array();
+    protected function getShippingOptionIDs($cart)
+    {
+        $shippingOptions = [];
         if (static::validCart($cart)) {
             foreach ($cart->getDeliveryOptionList() as $carriers) {
                 foreach ($carriers as $carrier) {
@@ -785,9 +804,9 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         return $shippingOptions;
     }
 
-    protected function createCustomer($session, $params) {
+    protected function createCustomer($session, $params)
+    {
         try {
-
             // initialize key parameters
             $cart = new Cart($session->id_cart);
             $customer_id = $cart->id_customer;
@@ -795,9 +814,9 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
 
             // TODO make into function if time
             $info = $this->getApi()->getPaymentInfo($session->purchase_id);
-            $jsonInfo = json_decode(json_encode($info), FALSE);
-            
-            if($jsonInfo->mode === "B2C") {
+            $jsonInfo = json_decode(json_encode($info), false);
+
+            if ($jsonInfo->mode === 'B2C') {
                 $purchaseMode = 'B2C';
                 $mode = $jsonInfo->b2C;
                 $invoicingAddress = $mode->invoicingAddress;
@@ -812,11 +831,11 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                 $invoicingFirstname = '-';
                 $invoicingLastname = '-';
 
-                if(isset($mode->customerInfo->firstName) && !empty($mode->customerInfo->firstName)) {
+                if (isset($mode->customerInfo->firstName) && !empty($mode->customerInfo->firstName)) {
                     $invoicingFirstname = $mode->customerInfo->firstName;
                 }
-    
-                if(isset($mode->customerInfo->lastName) && !empty($mode->customerInfo->lastName)) {
+
+                if (isset($mode->customerInfo->lastName) && !empty($mode->customerInfo->lastName)) {
                     $invoicingLastname = $mode->customerInfo->lastName;
                 }
             }
@@ -836,14 +855,14 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             // check if an user exists with given email
             $oldCustomerID = Customer::customerExists($email, true, false);
 
-            if($oldCustomerID) {
+            if ($oldCustomerID) {
                 $this->connectToOldCustomer($oldCustomerID, $session, $cart);
                 $customer = new Customer($oldCustomerID);
             } else {
                 // if customer has dummy data, update customer info
-                if($customer->firstname == $this->dummyFirst) {
+                if ($customer->firstname == $this->dummyFirst) {
                     // Truncating '-' causes issues
-                    if($invoicingFirstname === '-' || $invoicingLastname === '-') {
+                    if ($invoicingFirstname === '-' || $invoicingLastname === '-') {
                         $customer->firstname = '-';
                         $customer->lastname = '-';
                     } else {
@@ -855,8 +874,8 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                     $customer->update();
                 }
 
-                if($customer->is_guest) {
-                    if($session->create_customer) {
+                if ($customer->is_guest) {
+                    if ($session->create_customer) {
                         // customer wants to create user
                         $customer->is_guest = 0;
                         // save given password
@@ -869,16 +888,16 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                         $this->updateCustomerContext($customer, true);
                     }
                 }
-    
-                if(!$customer->newsletter) {
-                    if($session->newsletter) {
+
+                if (!$customer->newsletter) {
+                    if ($session->newsletter) {
                         $customer->newsletter = 1;
                         $customer->update();
                     }
                 }
             }
 
-            if($session->order_message) {
+            if ($session->order_message) {
                 $message = new Message();
                 $message->message = $session->order_message;
                 $message->id_cart = (int) $cart->id;
@@ -890,7 +909,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $state = $step->current;
             // $state = (int)$info['State'];
             if ($state !== Api::STATUS_COMPLETED) {
-                throw new AvardaException("Payment validation failed: invalid status " . $state);
+                throw new AvardaException('Payment validation failed: invalid status ' . $state);
             }
 
             // update addresses
@@ -899,7 +918,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $deliverAddressInfo = Utils::extractAddressInfo('deliveryAddress', $checkoutSite, $mode, $purchaseMode);
 
             // Checking the delivery address. If null values, the invoice address is used as delivery address.
-            if (! Utils::validAddressInfo($deliverAddressInfo)) {
+            if (!Utils::validAddressInfo($deliverAddressInfo)) {
                 $deliverAddressInfo = $invoiceAddressInfo;
             }
 
@@ -916,16 +935,16 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             // selected carrier
             $cart->id_carrier = $session->id_carrier;
             // recycled package
-            if((int) Configuration::get('PS_RECYCLABLE_PACK')) {
-                if($session->is_recycled) {
+            if ((int) Configuration::get('PS_RECYCLABLE_PACK')) {
+                if ($session->is_recycled) {
                     $cart->recyclable = 1;
                 }
             }
             // gift
-            if((int) Configuration::get('PS_GIFT_WRAPPING')) {
-                if($session->is_gift) {
+            if ((int) Configuration::get('PS_GIFT_WRAPPING')) {
+                if ($session->is_gift) {
                     $cart->gift = 1;
-                    if($session->gift_message) {
+                    if ($session->gift_message) {
                         $cart->gift_message = $session->gift_message;
                     }
                 }
@@ -934,20 +953,18 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $cart->update();
 
             // we need to update delivery address id also to tables cart_product and customization if it changed
-            if($oldAddressId != $deliverAddressId) {
+            if ($oldAddressId != $deliverAddressId) {
                 Db::getInstance()->execute('UPDATE `' . _DB_PREFIX_ . 'cart_product` SET `id_address_delivery` = ' . $deliverAddressId . ' WHERE  `id_cart` = ' . $cart->id . ' AND `id_address_delivery` = ' . $oldAddressId);
                 Db::getInstance()->execute('UPDATE `' . _DB_PREFIX_ . 'customization` SET `id_address_delivery` = ' . $deliverAddressId . ' WHERE  `id_cart` = ' . $cart->id . ' AND `id_address_delivery` = ' . $oldAddressId);
             }
 
             $oldAddress = new Address($oldAddressId);
             $oldAddress->delete();
-            
         } catch (Exception $e) {
             Logger::addLog('createCustomer(): error - ' . $e, 3, null, null, null, true);
         }
 
         return true;
-        
     }
 
     /**
@@ -955,11 +972,12 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
      * check if user exists with given email
      * add old id into session info if does
      */
-    protected function compareCustomer($session) {
+    protected function compareCustomer($session)
+    {
         $info = $this->getApi()->getPaymentInfo($session->purchase_id);
-        $jsonInfo = json_decode(json_encode($info), FALSE);
+        $jsonInfo = json_decode(json_encode($info), false);
 
-        if($jsonInfo->mode === "B2C") {
+        if ($jsonInfo->mode === 'B2C') {
             $mode = $jsonInfo->b2C;
         } else {
             $mode = $jsonInfo->b2B;
@@ -975,20 +993,22 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         // check if an user exists with given email
         $oldCustomerID = Customer::customerExists($email, true, false);
 
-        if($oldCustomerID) {
+        if ($oldCustomerID) {
             $info['Duplicate'] = $oldCustomerID;
             $session->info = json_encode($info);
-            $session->save(); 
+            $session->save();
         }
     }
 
     /**
      * function to crete a dummy guest customer for avarda no-login checkout
+     *
      * @return $customer_id
-     * -- if dummy customer is created succesfully, return customer id
-     * -- return -1 if adding fails
+     *                      -- if dummy customer is created succesfully, return customer id
+     *                      -- return -1 if adding fails
      */
-    protected function createDummyGuestCustomer($cart) {
+    protected function createDummyGuestCustomer($cart)
+    {
         $customer = new Customer();
         // set customer as guest
         $customer->is_guest = 1;
@@ -1007,7 +1027,7 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         $customer->optin = 0;
         // set profile as active
         $customer->active = 1;
-        if($customer->add()){
+        if ($customer->add()) {
             // customer was added succesfully
             // add newly created customer id into return value
             $customer_id = $customer->id;
@@ -1022,11 +1042,11 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             Logger::addLog('Dummy Guest Customer adding failed', 2, null, null, null, true);
         }
 
-
         return $customer_id;
     }
 
-    protected function createDummyAddress($customer) {
+    protected function createDummyAddress($customer)
+    {
         try {
             $address = new Address();
             // customer id
@@ -1040,24 +1060,25 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             $address->city = $this->dummyCity;
             $address->id_country = $this->dummyCountry;
 
-            if($address->add()) {
+            if ($address->add()) {
             } else {
                 Logger::addLog('Dummy Address adding failed', 2, null, null, null, true);
             }
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Logger::addLog('createDummyAddress() - error: ' . $e, 2, null, null, null, true);
         }
     }
 
-    protected function updateCarrier($session, $params) {
+    protected function updateCarrier($session, $params)
+    {
         $cart = new Cart($session->id_cart);
-        
+
         $cart->id_carrier = (int) $params['idCarrier'];
-        $cart->delivery_option = json_encode(array($cart->id_address_delivery => $cart->id_carrier . ','));
+        $cart->delivery_option = json_encode([$cart->id_address_delivery => $cart->id_carrier . ',']);
         $wrappingFeesTaxInc = $cart->getGiftWrappingPrice(true, $cart->id_address_delivery);
-        if(!$cart->update()) {
+        if (!$cart->update()) {
             Logger::addLog('updateCarrier - carrier not updated', 3, null, null, null, true);
-        } 
+        }
 
         $deliveryDescription = $this->module->l('Delivery cost (Including taxes)');
         $cartInfo = Utils::getCartInfo($cart, $deliveryDescription);
@@ -1066,23 +1087,26 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
         ];
 
         $this->getApi()->updateItems($session->purchase_id, $itemsArray);
+
         return 'refresh';
     }
 
-    protected function updateWrapping($session, $params) {
+    protected function updateWrapping($session, $params)
+    {
         $cart = new Cart($session->id_cart);
         //Because this check from url params, we have to check it as a string
-        if($params['gift'] == "true") {
+        if ($params['gift'] == 'true') {
             $cart->gift = 1;
         } else {
             $cart->gift = 0;
         }
-        if(!$cart->update()) {
+        if (!$cart->update()) {
             Logger::addLog('updateWrapping - wrapping not updated', 3, null, null, null, true);
         }
     }
 
-    protected function connectToOldCustomer($id_old_customer, $session, $cart, $order = null) {
+    protected function connectToOldCustomer($id_old_customer, $session, $cart, $order = null)
+    {
         try {
             //TODO: why do we arrive here when customer has null information, it causes the error?
             $session->id_customer = $id_old_customer;
@@ -1092,23 +1116,23 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             // update address
             $id_address_delivery = $cart->id_address_delivery;
             $id_address_invoice = $cart->id_address_invoice;
-            if($id_address_delivery == $id_address_invoice) {
+            if ($id_address_delivery == $id_address_invoice) {
                 $address = new Address($id_address_delivery);
                 $address->id_customer = $id_old_customer;
-                if($address->update()) {
+                if ($address->update()) {
                 } else {
                     Logger::addLog('connectToOldCustomer(): failed to update customer into address', 3, null, null, null, true);
                 }
             } else {
                 $address_delivery = new Address($id_address_delivery);
                 $address_delivery->id_customer = $id_old_customer;
-                if($address_delivery->update()) {
+                if ($address_delivery->update()) {
                 } else {
                     Logger::addLog('connectToOldCustomer(): failed to update customer into delivery address', 3, null, null, null, true);
                 }
                 $address_invoice = new Address($id_address_invoice);
                 $address_invoice->id_customer = $id_old_customer;
-                if($address_invoice->update()) {
+                if ($address_invoice->update()) {
                 } else {
                     Logger::addLog('connectToOldCustomer(): failed to update customer into invoice address', 3, null, null, null, true);
                 }
@@ -1116,10 +1140,10 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             // update cart and context with old customer data
             $cart->id_customer = $id_old_customer;
             $cart->secure_key = $customer->secure_key;
-            if($cart->update()) {
+            if ($cart->update()) {
                 $this->context->cart->id_customer = $cart->id_customer;
                 $this->context->cart->secure_key = $cart->secure_key;
-                if($this->context->cart->update()) {
+                if ($this->context->cart->update()) {
                 } else {
                     Logger::addLog('connectToOldCustomer(): failed to update customer into cart context', 3, null, null, null, true);
                 }
@@ -1130,23 +1154,23 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
             if ($order) {
                 $order->id_customer = $id_old_customer;
                 $order->secure_key = $customer->secure_key;
-                if($order->update()) {
+                if ($order->update()) {
                 } else {
                     Logger::addLog('connectToOldCustomer(): failed to update customer into corder', 3, null, null, null, true);
                 }
             }
             // delete ghost customer, since we don't need it anymore
-            if($id_old_customer != $id_customer) {
+            if ($id_old_customer != $id_customer) {
                 $this->updateCustomerContext($customer, false);
                 $ghostCustomer = new Customer($id_customer);
-                if($ghostCustomer->delete()) {
+                if ($ghostCustomer->delete()) {
                 } else {
                     Logger::addLog('connectToOldCustomer(): failed to delete ghost customer', 3, null, null, null, true);
                 }
             }
 
-            if($customer->is_guest) {
-                if($session->create_customer) {
+            if ($customer->is_guest) {
+                if ($session->create_customer) {
                     // customer wants to create user
                     $customer->is_guest = 0;
                     // save given password
@@ -1159,22 +1183,20 @@ class AvardaPaymentsCheckoutModuleFrontController extends ModuleFrontController
                     $this->updateCustomerContext($customer, true);
                 }
             }
-            
-            if(!$customer->newsletter) {
-                if($session->newsletter) {
+
+            if (!$customer->newsletter) {
+                if ($session->newsletter) {
                     $customer->newsletter = 1;
                     $customer->update();
                 }
             }
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             //TODO: comment this out when debugging and fix this
-            if(strpos($e, 'Property Address->id_country is empty.')) {
+            if (strpos($e, 'Property Address->id_country is empty.')) {
                 //do nothing here, continue validation
             } else {
                 Logger::addLog('connectToOldCustomer() - error: ' . $e, 3, null, null, null, true);
             }
         }
     }
-
-
 }

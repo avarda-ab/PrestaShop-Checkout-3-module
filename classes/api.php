@@ -19,12 +19,12 @@
 
 namespace AvardaPayments;
 
-use Tools;
 use Configuration;
-use Exception;
-use Logger;
-use Language;
 use Context;
+use Exception;
+use Language;
+use Logger;
+use Tools;
 
 require_once _PS_MODULE_DIR_ . 'avardapayments/classes/settings.php';
 
@@ -71,20 +71,22 @@ class Api
 
     /**
      * Api constructor.
+     *
      * @param string $mode
      * @param string $code
      * @param string $password
+     *
      * @throws AvardaException
      */
     public function __construct($mode, $client_id, $client_secret)
-    {   
+    {
         $this->server = $mode === 'test'
             ? 'https://avdonl-s-checkout.avarda.org'
             : 'https://avdonl-p-checkout.avarda.org';
         if (!$client_id || !$client_secret) {
-            throw new AvardaException("Credentials are not set");
+            throw new AvardaException('Credentials are not set');
         }
-        $this->auth = array('clientId' => $client_id, 'clientSecret' => $client_secret);
+        $this->auth = ['clientId' => $client_id, 'clientSecret' => $client_secret];
     }
 
     /**
@@ -93,27 +95,30 @@ class Api
      * https://docs.avarda.com/checkout-3/how-to-get-started//
      *
      * @param array $customerInfo
+     *
      * @return array|string
+     *
      * @throws AvardaException
      */
     public function initializePayment($customerInfo)
     {
-        $requestPayload = $this->makeb2CRequestPayload($customerInfo); 
+        $requestPayload = $this->makeb2CRequestPayload($customerInfo);
 
-        return $this->execute('/api/partner/payments', $requestPayload, 'POST', "initializePayment()");
+        return $this->execute('/api/partner/payments', $requestPayload, 'POST', 'initializePayment()');
     }
 
-    private static function getCustomerType() {
+    private static function getCustomerType()
+    {
         $type = '';
-         // b2b setting not on in prestashop
-         if(!Configuration::get('PS_B2B_ENABLE')) {
+        // b2b setting not on in prestashop
+        if (!Configuration::get('PS_B2B_ENABLE')) {
             $type = 'Private';
-         } else {
+        } else {
             $type = 'Company';
-         }
+        }
 
-         return $type;
-    } 
+        return $type;
+    }
 
     private function makeb2CRequestPayload($customerInfo)
     {
@@ -126,56 +131,54 @@ class Api
         $settings = new \AvardaPayments\Settings();
         $useOnePage = $settings->getUseOnePage();
 
-        for ($i = 0; $i < count($customerInfo['items']); $i++) {
+        for ($i = 0; $i < count($customerInfo['items']); ++$i) {
+            $singleItem = [
+                'description' => $customerInfo['items'][$i]['description'],
+                'amount' => $customerInfo['items'][$i]['amount'],
+                'taxAmount' => $customerInfo['items'][$i]['taxAmount'],
+            ];
 
-            $singleItem = array(
-                "description" => $customerInfo['items'][$i]['description'],
-                "amount" => $customerInfo['items'][$i]['amount'],
-                "taxAmount" => $customerInfo['items'][$i]['taxAmount']
-            );
-            
-            array_push($itemsArr, $singleItem);    
+            array_push($itemsArr, $singleItem);
         }
 
         $checkoutSetupOnePage = $this->getCheckoutSetup($language, 'B2C', 'Unchecked');
         $checkoutSetupNormal = $this->getCheckoutSetup($language, 'B2C', 'Hidden');
 
         if (!array_key_exists('InvoicingZip', $customerInfo)) {
-            $customerInfo['InvoicingZip'] = "";
+            $customerInfo['InvoicingZip'] = '';
         }
 
         if (!array_key_exists('DeliveryZip', $customerInfo)) {
-            $customerInfo['DeliveryZip'] = "";
+            $customerInfo['DeliveryZip'] = '';
         }
 
         if (!array_key_exists('Mail', $customerInfo)) {
-            $customerInfo['Mail'] = "";
+            $customerInfo['Mail'] = '';
         }
 
-        if($useOnePage) {
-            $request_payload = array(
-                "checkoutSetup" => $checkoutSetupOnePage,
-                    "items" => $itemsArr,
-                    "b2C" => array(
-                    "invoicingAddress" => array(
-                        "zip" => $customerInfo['InvoicingZip'],
-                    ),
-                    "deliveryAddress" => array(
-                        "zip" => $customerInfo['DeliveryZip'],
-                        "type" => "Default"
-                    ),
-                    "userInputs" => array(
-                        "email" => $customerInfo['Mail']
-                    )
-                ),
-            );
+        if ($useOnePage) {
+            $request_payload = [
+                'checkoutSetup' => $checkoutSetupOnePage,
+                    'items' => $itemsArr,
+                    'b2C' => [
+                    'invoicingAddress' => [
+                        'zip' => $customerInfo['InvoicingZip'],
+                    ],
+                    'deliveryAddress' => [
+                        'zip' => $customerInfo['DeliveryZip'],
+                        'type' => 'Default',
+                    ],
+                    'userInputs' => [
+                        'email' => $customerInfo['Mail'],
+                    ],
+                ],
+            ];
         } else {
             $phoneNumber = '';
             $invoicingAddressLine2 = null;
             $deliveryAddressLine2 = null;
 
-            if($customerInfo['Phone'] !== "")
-            {
+            if ($customerInfo['Phone'] !== '') {
                 $phoneNumber = $customerInfo['Phone'];
             }
 
@@ -188,56 +191,57 @@ class Api
             }
 
             // Country is not required, documentation is wrong
-            $request_payload = array(
-                "checkoutSetup" => $checkoutSetupNormal,
-                    "items" => $itemsArr,
-                    "b2C" => array(
-                    "invoicingAddress" => array(
-                        "firstName" => $customerInfo['InvoicingFirstName'],
-                        "lastName" => $customerInfo['InvoicingLastName'],
-                        "address1" => $customerInfo['InvoicingAddressLine1'],
-                        "address2" => $invoicingAddressLine2,
-                        "zip" => $customerInfo['InvoicingZip'],
-                        "city" => $customerInfo['InvoicingCity']
-                    ),
-                    "deliveryAddress" => array(
-                        "firstName" => $customerInfo['DeliveryFirstName'],
-                        "lastName" => $customerInfo['DeliveryLastName'],
-                        "address1" => $customerInfo['DeliveryAddressLine1'],
-                        "address2" => $deliveryAddressLine2,
-                        "zip" => $customerInfo['DeliveryZip'],
-                        "city" => $customerInfo['DeliveryCity']
-                    ),
-                    "userInputs" => array(
-                        "phone" => $phoneNumber,
-                        "email" => $customerInfo['Mail']
-										)
-                ),
-            );
+            $request_payload = [
+                'checkoutSetup' => $checkoutSetupNormal,
+                    'items' => $itemsArr,
+                    'b2C' => [
+                    'invoicingAddress' => [
+                        'firstName' => $customerInfo['InvoicingFirstName'],
+                        'lastName' => $customerInfo['InvoicingLastName'],
+                        'address1' => $customerInfo['InvoicingAddressLine1'],
+                        'address2' => $invoicingAddressLine2,
+                        'zip' => $customerInfo['InvoicingZip'],
+                        'city' => $customerInfo['InvoicingCity'],
+                    ],
+                    'deliveryAddress' => [
+                        'firstName' => $customerInfo['DeliveryFirstName'],
+                        'lastName' => $customerInfo['DeliveryLastName'],
+                        'address1' => $customerInfo['DeliveryAddressLine1'],
+                        'address2' => $deliveryAddressLine2,
+                        'zip' => $customerInfo['DeliveryZip'],
+                        'city' => $customerInfo['DeliveryCity'],
+                    ],
+                    'userInputs' => [
+                        'phone' => $phoneNumber,
+                        'email' => $customerInfo['Mail'],
+                                        ],
+                ],
+            ];
         }
-    
+
         return $request_payload;
     }
 
-    public function getCheckoutSetup($language, $mode, $differentDeliveryAddress) {
+    public function getCheckoutSetup($language, $mode, $differentDeliveryAddress)
+    {
         $context = Context::getContext();
-            
-        $checkoutSetup = array(
-            "language" => $language,
-            "mode" => "B2C",
-            "displayItems" => true,
-            "differentDeliveryAddress" => $differentDeliveryAddress
-        );
-        
-        $localAddresses = array(
-            "localhost",
-            "127.0.0.1",
-            "::1"
-        );
-        
+
+        $checkoutSetup = [
+            'language' => $language,
+            'mode' => 'B2C',
+            'displayItems' => true,
+            'differentDeliveryAddress' => $differentDeliveryAddress,
+        ];
+
+        $localAddresses = [
+            'localhost',
+            '127.0.0.1',
+            '::1',
+        ];
+
         $isLocalhost = in_array($_SERVER['SERVER_NAME'], $localAddresses);
-        
-        if(!$isLocalhost) {
+
+        if (!$isLocalhost) {
             $name = $context->controller->module->name;
             $link = $context->link->getModuleLink($name, 'notificationReceiver');
             $checkoutSetup['completedNotificationUrl'] = $link;
@@ -247,38 +251,40 @@ class Api
     }
 
     // Used for Avarda Checkout form embed. Using the language if it's supported, otherwise default to English.
-    public function getLanguageById($idLang) {
+    public function getLanguageById($idLang)
+    {
         $languageArr = Language::getLanguage($idLang);
         $language = locale_get_display_language($languageArr['language_code'], 'en');
 
         $avardaFormSupportedLanguages = [
-            "Danish",
-            "English",
-            "Estonian",
-            "Finnish",
-            "Norwegian",
-            "Swedish"
+            'Danish',
+            'English',
+            'Estonian',
+            'Finnish',
+            'Norwegian',
+            'Swedish',
         ];
 
         if (!in_array($language, $avardaFormSupportedLanguages)) {
             $language = 'English';
         }
-        
+
         return $language;
     }
 
-		public function getApiEnv() {
-			$env = '';
-			if($this->server === 'https://avdonl-s-checkout.avarda.org') {
-				$env = 'test';	
-			} else if($this->server === 'https://avdonl-p-checkout.avarda.org') {
-				$env = 'prod';
-			} else {
-				throw new AvardaException("API environment not found");
-			}
+    public function getApiEnv()
+    {
+        $env = '';
+        if ($this->server === 'https://avdonl-s-checkout.avarda.org') {
+            $env = 'test';
+        } elseif ($this->server === 'https://avdonl-p-checkout.avarda.org') {
+            $env = 'prod';
+        } else {
+            throw new AvardaException('API environment not found');
+        }
 
-			return $env;
-		}
+        return $env;
+    }
 
     /**
      * executes UpdateItems api method
@@ -287,18 +293,20 @@ class Api
      *
      * @param string $purchaseId
      * @param array $items
+     *
      * @return array|string
+     *
      * @throws AvardaException
      */
     public function updateItems($purchaseId, $items)
     {
         return $this->execute('/api/partner/payments/' . $purchaseId . '/items', $items, 'PUT', 'updateItems()');
     }
-    
-    public function updateDeliveryAddress($purchaseId, $customerInfo) 
+
+    public function updateDeliveryAddress($purchaseId, $customerInfo)
     {
         $type = $this->getCustomerType();
-        //TODO: get all the necessary information here 
+        //TODO: get all the necessary information here
         $address = [
             'differentDeliveryAddress' => 'Unchecked',
             'deliveryAddress' => [
@@ -310,34 +318,36 @@ class Api
                 'firstname' => $customerInfo['firstname'],
                 'lastname' => $customerInfo['lastname'],
                 'type' => $type,
-            ]
+            ],
         ];
-        return $this->execute('/api/partner/payments/' . $purchaseId . '/address', $address, 'PUT');
 
+        return $this->execute('/api/partner/payments/' . $purchaseId . '/address', $address, 'PUT');
     }
 
     /**
      * @param string $purchaseId
+     *
      * @return array|string
+     *
      * @throws AvardaException
      */
     public function getPaymentInfo($purchaseId)
     {
-        return $this->execute('/api/partner/payments/' . $purchaseId, NULL, 'GET', 'getPaymentInfo()');
+        return $this->execute('/api/partner/payments/' . $purchaseId, null, 'GET', 'getPaymentInfo()');
     }
 
     public function testApiCredentials($clientId, $clientSecret)
     {
         $authCredentials = [
             'clientId' => $clientId,
-            'clientSecret' => $clientSecret
+            'clientSecret' => $clientSecret,
         ];
 
         $accessToken = $this->authenticate($authCredentials);
-        if (!empty($accessToken)){
+        if (!empty($accessToken)) {
             return true;
         } else {
-            throw new AvardaException("Authentication failed");
+            throw new AvardaException('Authentication failed');
         }
     }
 
@@ -347,36 +357,39 @@ class Api
      * @param $items
      * @param null $trackingCode
      * @param null $posId
-     * @return boolean
+     *
+     * @return bool
+     *
      * @throws AvardaException
      */
-    public function createPurchaseOrder($orderReference, $purchaseId, $items, $trackingCode=null, $posId=null)
-    {   
-			//TODO: why doesn't the orderReference appear anywhere?
+    public function createPurchaseOrder($orderReference, $purchaseId, $items, $trackingCode = null, $posId = null)
+    {
+        //TODO: why doesn't the orderReference appear anywhere?
         $payload = [
-            "Items" => $items,
-            "OrderReference" => $orderReference,
+            'Items' => $items,
+            'OrderReference' => $orderReference,
             'TranId' => Tools::passwdGen(30),
         ];
-        
+
         if (!empty($trackingCode)) {
             $payload['TrackingCode'] = $trackingCode;
         }
         if (!empty($posId)) {
             $payload['PosId'] = $posId;
         }
-        
+
         return $this->execute('/api/partner/payments/' . $purchaseId . '/order', $payload, 'POST', 'createPurchaseOrder');
     }
 
-		public function putExtraIdentifiers($orderReference, $purchaseId) {
-			
-			$payload = [
-				'orderReference' => $orderReference
-			];
+    public function putExtraIdentifiers($orderReference, $purchaseId)
+    {
+        $payload = [
+                'orderReference' => $orderReference,
+            ];
 
-			return $this->execute('/api/partner/payments/' . $purchaseId . '/extraidentifiers', $payload, 'PUT', 'putExtraIdentifiers');
-		}
+        return $this->execute('/api/partner/payments/' . $purchaseId . '/extraidentifiers', $payload, 'PUT', 'putExtraIdentifiers');
+    }
+
     /* Old code that might be useful
     public function createPurchaseOrder($orderReference, $purchaseId, $items, $trackingCode=null, $posId=null)
     {
@@ -407,24 +420,28 @@ class Api
         $payload = [
             'reason' => $reason,
         ];
+
         return $this->execute('/api/partner/payments/' . $purchaseId . '/cancel', $payload, 'POST', 'cancelPayment');
     }
 
-    public function refundAmount($orderReference, $purchaseId, $amount) {
-        
+    public function refundAmount($orderReference, $purchaseId, $amount)
+    {
         $payload = [
             'orderReference' => $orderReference,
             'tranId' => Tools::passwdGen(30),
             'amount' => $amount,
         ];
-        return $this->execute('/api/partner/payments/' . $purchaseId . '/refund', $payload, 'POST', 'refundAmount');
-    }  
 
-    public function refundRemaining($orderReference, $purchaseId) {
+        return $this->execute('/api/partner/payments/' . $purchaseId . '/refund', $payload, 'POST', 'refundAmount');
+    }
+
+    public function refundRemaining($orderReference, $purchaseId)
+    {
         $payload = [
             'orderReference' => $orderReference,
             'tranId' => Tools::passwdGen(30),
         ];
+
         return $this->execute('/api/partner/payments/' . $purchaseId . '/refund', $payload, 'POST');
     }
 
@@ -432,49 +449,53 @@ class Api
     /**
      * @param string $orderReference
      * @param string $purchaseId
-     * @param double $amount
-     * @return boolean
+     * @param float $amount
+     *
+     * @return bool
+     *
      * @throws AvardaException
      */
-/*
-    public function refundAmount($orderReference, $purchaseId, $amount)
-    {
-        $payload = [
-            'ExternalId' => $purchaseId,
-            'Amount' => $amount,
-            'OrderReference' => $orderReference,
-            'TranId' => Tools::passwdGen(30),
-        ];
-        $errors = $this->execute('/CheckOut2Api/Commerce/Refund', $payload, false);
-        return self::processErrors($errors);
-    }
-/*
-    /**
-     * @param string $orderReference
-     * @param string $purchaseId
-     * @param array $items
-     * @return boolean
-     * @throws AvardaException
-     */
+    /*
+        public function refundAmount($orderReference, $purchaseId, $amount)
+        {
+            $payload = [
+                'ExternalId' => $purchaseId,
+                'Amount' => $amount,
+                'OrderReference' => $orderReference,
+                'TranId' => Tools::passwdGen(30),
+            ];
+            $errors = $this->execute('/CheckOut2Api/Commerce/Refund', $payload, false);
+            return self::processErrors($errors);
+        }
+    /*
+        /**
+         * @param string $orderReference
+         * @param string $purchaseId
+         * @param array $items
+         * @return boolean
+         * @throws AvardaException
+         */
 
     /**
      * @param $orderReference
      * @param $purchaseId
-     * @return boolean
+     *
+     * @return bool
+     *
      * @throws AvardaException
      */
-/*
-    public function refundRemaining($orderReference, $purchaseId)
-    {
-        $payload = [
-            'ExternalId' => $purchaseId,
-            'OrderReference' => $orderReference,
-            'TranId' => Tools::passwdGen(30),
-        ];
-        $errors = $this->execute('/CheckOut2Api/Commerce/RefundRemaining', $payload, false);
-        return self::processErrors($errors);
-    }
-*/
+    /*
+        public function refundRemaining($orderReference, $purchaseId)
+        {
+            $payload = [
+                'ExternalId' => $purchaseId,
+                'OrderReference' => $orderReference,
+                'TranId' => Tools::passwdGen(30),
+            ];
+            $errors = $this->execute('/CheckOut2Api/Commerce/RefundRemaining', $payload, false);
+            return self::processErrors($errors);
+        }
+    */
 
     public function returnItems($orderReference, $purchaseId, $items)
     {
@@ -483,6 +504,7 @@ class Api
             'orderReference' => $orderReference,
             'tranId' => Tools::passwdGen(30),
         ];
+
         return $this->execute('/api/partner/payments/' . $purchaseId . '/return', $payload, 'POST', 'returnItems');
     }
 
@@ -490,97 +512,100 @@ class Api
      * @param $endpoint
      * @param $body
      * @param bool $jsonResponse
-     * @return string | array
+     *
+     * @return string|array
+     *
      * @throws AvardaException
      */
-
-    public function execute($endpoint, $body, $method='POST', $apiCall=null) {
+    public function execute($endpoint, $body, $method = 'POST', $apiCall = null)
+    {
         $accessToken = $this->authenticate();
-        if(empty($accessToken)) {
-            throw new AvardaException("API error: authentication error");
-            die();
+        if (empty($accessToken)) {
+            throw new AvardaException('API error: authentication error');
+            exit();
         }
-        
-        if($method === 'POST') {
+
+        if ($method === 'POST') {
             $fetch = new Fetch($this->server . $endpoint, $method, $body);
 
             $fetch->setHeader('Authorization', 'Bearer ' . $accessToken);
             $responseArray = $fetch->execute();
-            if($responseArray['httpStatus'] > 299) {
+            if ($responseArray['httpStatus'] > 299) {
                 throw new AvardaException('API error in call: ' . $apiCall . ' Error: ' . $responseArray['response']);
-                $response = NULL;
-            } else if(empty($responseArray['response']) && $apiCall === 'refundAmount') {
+                $response = null;
+            } elseif (empty($responseArray['response']) && $apiCall === 'refundAmount') {
                 $response = $responseArray['response'];
+
                 return $response;
-            } else if(empty($responseArray['response']) && $apiCall === 'createPurchaseOrder') {
+            } elseif (empty($responseArray['response']) && $apiCall === 'createPurchaseOrder') {
                 $response = $responseArray['response'];
+
                 return $response;
-            } else if(empty($responseArray['response']) && $apiCall === 'cancelPayment') {
+            } elseif (empty($responseArray['response']) && $apiCall === 'cancelPayment') {
                 $response = $responseArray['response'];
+
                 return $response;
-            } else if(empty($responseArray['response']) && $apiCall === 'returnItems') {
+            } elseif (empty($responseArray['response']) && $apiCall === 'returnItems') {
                 $response = $responseArray['response'];
+
                 return $response;
-            } else if(empty($responseArray['response'])) {
+            } elseif (empty($responseArray['response'])) {
                 throw new AvardaException('API error in call: ' . $apiCall . ' Error: empty response', 3, null, null, null, true);
-                $response = NULL;
+                $response = null;
             } else {
                 $response = json_decode($responseArray['response'], true);
             }
-           
-            return $response;
 
-        } else if ($method === 'PUT') {
+            return $response;
+        } elseif ($method === 'PUT') {
             $fetch = new Fetch($this->server . $endpoint, $method, $body);
 
             $fetch->setHeader('Authorization', 'Bearer ' . $accessToken);
             $responseArray = $fetch->execute();
-            
-            if($responseArray['httpStatus'] > 299) {
+
+            if ($responseArray['httpStatus'] > 299) {
                 throw new AvardaException('API error in call: ' . $apiCall . ' Error: ' . $responseArray['response']);
-                $response = NULL;
-            } 
-            else if(!empty($responseArray['response'])) {
+                $response = null;
+            } elseif (!empty($responseArray['response'])) {
                 $response = json_decode($responseArray['response'], true);
             } else {
                 $response = $responseArray['response'];
             }
 
             return $response;
-            
-        }  else if($method === 'GET') {
+        } elseif ($method === 'GET') {
             $fetch = new Fetch($this->server . $endpoint, $method, $body);
 
             $fetch->setHeader('Authorization', 'Bearer ' . $accessToken);
             $responseArray = $fetch->execute();
 
-            if($responseArray['httpStatus'] > 299) {
+            if ($responseArray['httpStatus'] > 299) {
                 throw new AvardaException('API error in call: ' . $apiCall . ' Error: ' . $responseArray['response']);
-                $response = NULL;
+                $response = null;
             } else {
                 $response = json_decode($responseArray['response'], true);
             }
 
             return $response;
         }
-
     }
 
-    private function authenticate() {
+    private function authenticate()
+    {
         $accessToken = '';
 
         // Send POST request and save "Partner access token"
-        $request_url = $this->server . "/api/partner/tokens";
-        
+        $request_url = $this->server . '/api/partner/tokens';
+
         $request_payload = $this->auth;
-            
-        $options = array(
-            'http' => array(
-                'header'  => "Content-type: application/json\r\n",
-                'method'  => 'POST',
-                'content' => json_encode($request_payload)
-            )
-        );
+
+        $options = [
+            'http' => [
+                'header' => "Content-type: application/json\r\n",
+                'method' => 'POST',
+                'content' => json_encode($request_payload),
+            ],
+        ];
 
         try {
             $context = stream_context_create($options);
@@ -590,18 +615,17 @@ class Api
             } else {
                 $json_data = json_decode($result);
                 $accessToken = $json_data->token;
-    
-            };
-        }
-        catch (exception $e) {
+            }
+        } catch (exception $e) {
             Logger::addLog('Unexpected error happened during API authentication ' . $e, 1, null, null, null, true);
         }
-        
+
         return $accessToken;
     }
 
     /**
      * @param $status
+     *
      * @return string
      */
     public static function getStatusName($status)
@@ -676,7 +700,9 @@ class Api
 
     /**
      * @param array $errors
+     *
      * @return bool
+     *
      * @throws AvardaException
      */
     private static function processErrors($errors)
@@ -688,11 +714,12 @@ class Api
                     $errorsStrings = array_map(function ($error) {
                         return isset($error['ErrorMessage']) ? $error['ErrorMessage'] : 'Unknown error';
                     }, $json);
-                    throw new AvardaException("API error: " . implode(', ', $errorsStrings));
+                    throw new AvardaException('API error: ' . implode(', ', $errorsStrings));
                 }
-                throw new AvardaException("API error: " . $json);
+                throw new AvardaException('API error: ' . $json);
             }
         }
+
         return true;
     }
 }

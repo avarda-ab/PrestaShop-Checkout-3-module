@@ -1,7 +1,7 @@
 <?php
 
 global $_MODULE;
-$_MODULE = array();
+$_MODULE = [];
 $_MODULE['<{avardapayments}prestashop>opcheckout_7cfd0f930f982ce237ea746b58c3077e'] = 'Ostoskori on tyhjä';
 $_MODULE['<{avardapayments}prestashop>carriers_ea9cf7e47ff33b2be14e6dd07cbcefc6'] = 'Toimitustavat';
 $_MODULE['<{avardapayments}prestashop>carriers_b24ce0cd392a5b0b8dedc66c25213594'] = 'Ilmainen';

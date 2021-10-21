@@ -25,6 +25,7 @@ class AppTranslation
 
     /**
      * AppTranslation constructor.
+     *
      * @param $module
      */
     public function __construct($module)
@@ -37,47 +38,48 @@ class AppTranslation
      */
     public function getTranslations()
     {
-        return $this->changed(array(
-            "API credentials" => $this->l('API credentials'),
-            "Be aware, you are in production mode" => $this->l('Be aware, you are in production mode'),
-            "Cancel" => $this->l('Cancel'),
-            "Cart" => $this->l('Cart'),
-            "Checkout sessions (%s)" => $this->l('Checkout sessions (%s)'),
-            "Checkout sessions" => $this->l('Checkout sessions'),
-            "Close" => $this->l('Close'),
-            "Completed status" => $this->l('Completed status'),
-            "Customer" => $this->l('Customer'),
-            "Date" => $this->l('Date'),
-            "Delivery status" => $this->l('Delivery status'),
-            "Error - invalid credentials" => $this->l('Error - invalid credentials'),
-            "Failed to load sessions" => $this->l('Failed to load sessions'),
-            "Loading data, please wait..." => $this->l('Loading data, please wait...'),
-            "Mode" => $this->l('Mode'),
-            "Next Page" => $this->l('Next Page'),
-            "No session sessions were found" => $this->l('No session sessions were found'),
-            "Order status when payment has been successfully completed" => $this->l('Order status when payment has been successfully completed'),
-            "Order statuses" => $this->l('Order statuses'),
-            "Order" => $this->l('Order'),
-            "Please enter your username" => $this->l('Please enter your username'),
-            "Previous Page" => $this->l('Previous Page'),
-            "Production mode" => $this->l('Production mode'),
-            "Save changes" => $this->l('Save changes'),
-            "Session" => $this->l('Session'),
-            "Sessions" => $this->l('Sessions'),
-            "Settings has been saved" => $this->l('Settings has been saved'),
-            "Settings" => $this->l('Settings'),
-            "Status" => $this->l('Status'),
-            "Success - credentials are valid" => $this->l('Success - credentials are valid'),
-            "Test credentials" => $this->l('Test credentials'),
-            "Test mode allows you to verify avarda integration against staging environment" => $this->l('Test mode allows you to verify avarda integration against staging environment'),
-            "Test mode" => $this->l('Test mode'),
-            "Username" => $this->l('Username'),
-            "When order transition to this status, avarda Purchase Order will be created" => $this->l('When order transition to this status, avarda Purchase Order will be created')
-        ));
+        return $this->changed([
+            'API credentials' => $this->l('API credentials'),
+            'Be aware, you are in production mode' => $this->l('Be aware, you are in production mode'),
+            'Cancel' => $this->l('Cancel'),
+            'Cart' => $this->l('Cart'),
+            'Checkout sessions (%s)' => $this->l('Checkout sessions (%s)'),
+            'Checkout sessions' => $this->l('Checkout sessions'),
+            'Close' => $this->l('Close'),
+            'Completed status' => $this->l('Completed status'),
+            'Customer' => $this->l('Customer'),
+            'Date' => $this->l('Date'),
+            'Delivery status' => $this->l('Delivery status'),
+            'Error - invalid credentials' => $this->l('Error - invalid credentials'),
+            'Failed to load sessions' => $this->l('Failed to load sessions'),
+            'Loading data, please wait...' => $this->l('Loading data, please wait...'),
+            'Mode' => $this->l('Mode'),
+            'Next Page' => $this->l('Next Page'),
+            'No session sessions were found' => $this->l('No session sessions were found'),
+            'Order status when payment has been successfully completed' => $this->l('Order status when payment has been successfully completed'),
+            'Order statuses' => $this->l('Order statuses'),
+            'Order' => $this->l('Order'),
+            'Please enter your username' => $this->l('Please enter your username'),
+            'Previous Page' => $this->l('Previous Page'),
+            'Production mode' => $this->l('Production mode'),
+            'Save changes' => $this->l('Save changes'),
+            'Session' => $this->l('Session'),
+            'Sessions' => $this->l('Sessions'),
+            'Settings has been saved' => $this->l('Settings has been saved'),
+            'Settings' => $this->l('Settings'),
+            'Status' => $this->l('Status'),
+            'Success - credentials are valid' => $this->l('Success - credentials are valid'),
+            'Test credentials' => $this->l('Test credentials'),
+            'Test mode allows you to verify avarda integration against staging environment' => $this->l('Test mode allows you to verify avarda integration against staging environment'),
+            'Test mode' => $this->l('Test mode'),
+            'Username' => $this->l('Username'),
+            'When order transition to this status, avarda Purchase Order will be created' => $this->l('When order transition to this status, avarda Purchase Order will be created'),
+        ]);
     }
 
     /**
      * @param stirng $str
+     *
      * @return string
      */
     public function l($str)
@@ -87,16 +89,18 @@ class AppTranslation
 
     /**
      * @param $array
+     *
      * @return array
      */
     private function changed($array)
     {
-        $ret = array();
+        $ret = [];
         foreach ($array as $key => $value) {
             if ($value != $key) {
                 $ret[$key] = $value;
             }
         }
+
         return $ret;
     }
 }

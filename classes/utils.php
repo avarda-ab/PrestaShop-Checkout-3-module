@@ -19,26 +19,26 @@
 
 namespace AvardaPayments;
 
-use \Cart;
-use \Customer;
-use Order;
-use \Validate;
-use \Address;
-use \Exception;
-use \Tools;
-use \Country;
-use \PrestaShopLogger;
+use Address;
+use Cart;
+use Country;
+use Customer;
+use Exception;
+use PrestaShopLogger;
+use Tools;
+use Validate;
 
 class Utils
 {
-
     /**
      * @param Cart $cart
+     *
      * @return array
+     *
      * @throws Exception
      */
     public static function getCartInfo(Cart $cart, $deliveryDescription = null)
-    {   
+    {
         $items = array_map(function ($product) {
             return [
                 'description' => static::maxChars($product['quantity'] . ' x ' . $product['name'], 35),
@@ -52,7 +52,7 @@ class Utils
             $items[] = [
                 'description' => 'Discount',
                 'amount' => strval(-1 * $discount),
-                'taxAmount' => 0
+                'taxAmount' => 0,
             ];
         }
 
@@ -60,7 +60,7 @@ class Utils
         $deliveryItem = [
             'description' => $deliveryDescription,
             'amount' => strval($deliveryItemCost),
-            'taxAmount' => 0
+            'taxAmount' => 0,
         ];
         array_push($items, $deliveryItem);
 
@@ -72,11 +72,12 @@ class Utils
 
     /**
      * @param Cart $cart
+     *
      * @return array
      */
     public static function getCustomerInfo(Cart $cart)
     {
-        $id = (int)$cart->id_customer;
+        $id = (int) $cart->id_customer;
         if (!$id) {
             return [];
         }
@@ -92,12 +93,14 @@ class Utils
         ];
         $data = array_merge($data, static::addressInfo($delivery, 'Delivery'));
         $data = array_merge($data, static::addressInfo($invoice, 'Invoicing'));
+
         return $data;
     }
 
     /**
      * @param Address $address
      * @param $prefix
+     *
      * @return array
      */
     public static function addressInfo(Address $address, $prefix)
@@ -105,6 +108,7 @@ class Utils
         if (!Validate::isLoadedObject($address)) {
             return [];
         }
+
         return array_filter([
             $prefix . 'FirstName' => $address->firstname,
             $prefix . 'LastName' => $address->lastname,
@@ -117,6 +121,7 @@ class Utils
 
     /**
      * @param $cartInfo
+     *
      * @return string
      */
     public static function getCartInfoSignature($cartInfo)
@@ -124,10 +129,10 @@ class Utils
         return $cartInfo['price'] . ',' . count($cartInfo['items']);
     }
 
-
     /**
      * @param $type
      * @param $paymentInfo
+     *
      * @return array
      */
     public static function extractAddressInfo($type, $checkoutSite, $paymentInfo, $purchaseMode)
@@ -137,12 +142,12 @@ class Utils
         $country = '';
         $id_country = 0;
 
-        if(isset($checkoutSite->countryCode) && !empty($checkoutSite->countryCode)) {
+        if (isset($checkoutSite->countryCode) && !empty($checkoutSite->countryCode)) {
             // country code is set, change it into alpha 2
             $country = $checkoutSite->countryCode;
             $alpha2 = static::toAlpha2($country);
             $id_country = Country::getByIso($alpha2);
-        } else if(isset($paymentInfo->$type->country) && !empty($paymentInfo->$type->country)) {
+        } elseif (isset($paymentInfo->$type->country) && !empty($paymentInfo->$type->country)) {
             // get alpha2 by country name instead
             $country = $paymentInfo->$type->country;
             $alpha2 = static::nameToAlpha2($country);
@@ -155,19 +160,18 @@ class Utils
         $firstname = '-';
         $lastName = '-';
 
-        if($purchaseMode === 'B2B') {
-            
-            if($type === 'invoicingAddress') {
-                if(isset($paymentInfo->invoicingAddress->name) && !empty($paymentInfo->invoicingAddress->name)) {
+        if ($purchaseMode === 'B2B') {
+            if ($type === 'invoicingAddress') {
+                if (isset($paymentInfo->invoicingAddress->name) && !empty($paymentInfo->invoicingAddress->name)) {
                     $company = $paymentInfo->invoicingAddress->name;
                 }
             }
 
-            if(isset($paymentInfo->customerInfo->firstName) && !empty($paymentInfo->customerInfo->firstName)) {
+            if (isset($paymentInfo->customerInfo->firstName) && !empty($paymentInfo->customerInfo->firstName)) {
                 $firstname = $paymentInfo->customerInfo->firstName;
             }
 
-            if(isset($paymentInfo->customerInfo->lastName) && !empty($paymentInfo->customerInfo->lastName)) {
+            if (isset($paymentInfo->customerInfo->lastName) && !empty($paymentInfo->customerInfo->lastName)) {
                 $lastName = $paymentInfo->customerInfo->lastName;
             }
 
@@ -176,9 +180,9 @@ class Utils
                 $vat_number = $paymentInfo['OrganizationNumber'];
             }
             */
-            
+
             // B2B has different fields for invoicing and delivery address
-            if($type === 'invoicingAddress') {
+            if ($type === 'invoicingAddress') {
                 return [
                     'address1' => $paymentInfo->$type->address1,
                     'address2' => $paymentInfo->$type->address2,
@@ -189,7 +193,7 @@ class Utils
                     'phone' => $paymentInfo->userInputs->phone,
                     'id_country' => $id_country,
                     'company' => $company,
-                    'vat_number' => $vat_number
+                    'vat_number' => $vat_number,
                 ];
             } else {
                 return [
@@ -202,10 +206,9 @@ class Utils
                     'phone' => $paymentInfo->userInputs->phone,
                     'id_country' => $id_country,
                     'company' => $company,
-                    'vat_number' => $vat_number
+                    'vat_number' => $vat_number,
                 ];
             }
-
         } else {
             // B2C address
             return [
@@ -218,47 +221,50 @@ class Utils
                 'phone' => $paymentInfo->userInputs->phone,
                 'id_country' => $id_country,
                 'company' => $company,
-                'vat_number' => $vat_number
+                'vat_number' => $vat_number,
             ];
         }
     }
 
     /**
      * @param $addressInfo
+     *
      * @return bool
      */
     public static function validAddressInfo($addressInfo)
     {
-        return (
+        return
             $addressInfo['id_country'] &&
             $addressInfo['address1'] &&
             $addressInfo['city'] &&
             $addressInfo['postcode'] &&
             $addressInfo['firstname'] &&
             $addressInfo['lastname']
-        );
+        ;
     }
 
     /**
      * @param array $address
      * @param $addressInfo
+     *
      * @return bool
      */
     public static function addressMatches($address, $addressInfo)
     {
-        foreach ($addressInfo as $key => $value)
-        {
+        foreach ($addressInfo as $key => $value) {
             $val1 = static::emptyIfNull($address[$key]);
             $val2 = static::emptyIfNull($value);
             if ($val1 != $val2) {
                 return false;
             }
         }
+
         return true;
     }
 
     /**
      * @param $amount
+     *
      * @return float
      */
     public static function roundPrice($amount)
@@ -269,6 +275,7 @@ class Utils
     /**
      * @param $str
      * @param $max
+     *
      * @return string
      */
     public static function maxChars($str, $max)
@@ -278,11 +285,13 @@ class Utils
                 return mb_substr($str, 0, $max);
             }
         }
+
         return $str;
     }
 
     /**
      * @param $addresses
+     *
      * @return string
      */
     public static function getAddressAlias($addresses)
@@ -294,12 +303,14 @@ class Utils
                 $max = max($max, $matches[1]);
             }
         }
-        $max++;
+        ++$max;
+
         return "Avarda $max";
     }
 
     /**
      * @param string $str
+     *
      * @return string
      */
     private static function emptyIfNull($str)
@@ -307,9 +318,10 @@ class Utils
         return $str ? $str : '';
     }
 
-    public function truncateValue($string, $length, $name = false) {
+    public function truncateValue($string, $length, $name = false)
+    {
         // if string is name, remove numbers and non-word characters except '-'
-        if($name) {
+        if ($name) {
             $string = (string) preg_replace('([^\w.-åäöÅÄÖ]|\d|_)', '', $string);
             $string = trim($string);
         }
@@ -570,10 +582,12 @@ class Utils
         if (isset($alpha3to2[$alpha3])) {
             return $alpha3to2[$alpha3];
         }
+
         return $alpha3;
     }
 
-    private static function nameToAlpha2($name) {
+    private static function nameToAlpha2($name)
+    {
         $nameToAlpha2 = [
             'Andorra' => 'AD',
             'United Arab Emirates' => 'AE',
@@ -822,7 +836,7 @@ class Utils
         if (isset($nameToAlpha2[$name])) {
             return $nameToAlpha2[$name];
         }
+
         return $name;
     }
-
 }

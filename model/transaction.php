@@ -16,10 +16,8 @@
  * @copyright 2017-2019 Petr Hucik
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
-
 class AvardaTransaction extends ObjectModel
 {
-
     const TRANSACTION_AUTHORIZED = 'authorized';
     const TRANSACTION_DELIVERY = 'delivery';
     const TRANSACTION_REFUND = 'refund';
@@ -36,7 +34,7 @@ class AvardaTransaction extends ObjectModel
                 self::TRANSACTION_DELIVERY,
                 self::TRANSACTION_CANCEL,
                 self::TRANSACTION_REFUND,
-                self::TRANSACTION_RETURN
+                self::TRANSACTION_RETURN,
             ]],
             'amount' => ['type' => self::TYPE_STRING],
             'success' => ['type' => self::TYPE_BOOL],
@@ -54,18 +52,21 @@ class AvardaTransaction extends ObjectModel
 
     /**
      * @param Order $order
-     * @param boolean $all
+     * @param bool $all
+     *
      * @return PrestaShopCollection
+     *
      * @throws PrestaShopException
      */
     public static function getForOrder(Order $order, $all = false)
     {
         $collection = new PrestaShopCollection('AvardaTransaction');
-        $collection->where('id_order', '=', (int)$order->id);
-        if (! $all) {
+        $collection->where('id_order', '=', (int) $order->id);
+        if (!$all) {
             $collection->where('success', '=', 1);
         }
         $collection->orderBy('date_add');
+
         return $collection;
     }
 }

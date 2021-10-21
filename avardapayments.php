@@ -16,7 +16,6 @@
  * @copyright 2017-2019 Petr Hucik
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
-
 require_once __DIR__ . '/app-translation.php';
 require_once __DIR__ . '/classes/settings.php';
 require_once __DIR__ . '/classes/fetch.php';
@@ -39,7 +38,7 @@ class AvardaPayments extends PaymentModule
     {
         $this->name = 'avardapayments';
         $this->tab = 'payments_gateways';
-        $this->version = '1.1.0';
+        $this->version = '3.1.0';
         $this->author = 'DataKick, Loiki';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -48,59 +47,64 @@ class AvardaPayments extends PaymentModule
         $this->description = $this->l('Avarda payment gateway');
         $this->moduleNameTranslatable = $this->displayName;
         $this->moduleDescriptionTranslatable = $this->l('Payment option');
-        $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
         $this->controllers = ['checkout'];
     }
 
-
     /**
      * @param bool $createTables
+     *
      * @return bool
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
     public function install($createTables = true)
     {
-        return (
+        return
             parent::install() &&
             $this->installDb($createTables) &&
             $this->installTab() &&
             $this->registerHooks() &&
             $this->getSettings()->init()
-        );
+        ;
     }
 
     /**
      * @param bool $dropTables
+     *
      * @return bool
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
     public function uninstall($dropTables = true)
     {
-        return (
+        return
             $this->getSettings()->remove() &&
             $this->removeTab() &&
             $this->uninstallDb($dropTables) &&
             parent::uninstall()
-        );
+        ;
     }
 
     /**
      * @return bool
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
     public function reset()
     {
-        return (
+        return
             $this->uninstall(false) &&
             $this->install(false)
-        );
+        ;
     }
 
     /**
      * @param $create
+     *
      * @return bool
      */
     private function installDb($create)
@@ -108,11 +112,13 @@ class AvardaPayments extends PaymentModule
         if (!$create) {
             return true;
         }
+
         return $this->executeSqlScript('install');
     }
 
     /**
      * @param $drop
+     *
      * @return bool
      */
     private function uninstallDb($drop)
@@ -120,12 +126,14 @@ class AvardaPayments extends PaymentModule
         if (!$drop) {
             return true;
         }
+
         return $this->executeSqlScript('uninstall', false);
     }
 
     /**
      * @param $script
      * @param bool $check
+     *
      * @return bool
      */
     public function executeSqlScript($script, $check = true)
@@ -158,6 +166,7 @@ class AvardaPayments extends PaymentModule
                 }
             }
         }
+
         return true;
     }
 
@@ -166,17 +175,17 @@ class AvardaPayments extends PaymentModule
      */
     public function registerHooks()
     {
-        return (
+        return
             $this->registerHook('paymentOptions') &&
             $this->registerHook('actionOrderStatusUpdate') &&
             $this->registerHook('displayAdminOrder') &&
             $this->registerHook('actionProductCancel')
-        );
+        ;
     }
-
 
     /**
      * @return int
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
@@ -187,35 +196,42 @@ class AvardaPayments extends PaymentModule
         $tab->class_name = 'AdminAvardaPaymentsBackend';
         $tab->module = $this->name;
         $tab->id_parent = $this->getTabParent();
-        $tab->name = array();
+        $tab->name = [];
         foreach (Language::getLanguages(true) as $lang) {
             $tab->name[$lang['id_lang']] = 'Avarda payments';
         }
+
         return $tab->add();
     }
 
     /**
      * @return bool
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
-    private function removeTab() {
+    private function removeTab()
+    {
         $tabId = Tab::getIdFromClassName('AdminAvardaPaymentsBackend');
         if ($tabId) {
             $tab = new Tab($tabId);
+
             return $tab->delete();
         }
+
         return true;
     }
 
     /**
      * @return int
      */
-    private function getTabParent() {
+    private function getTabParent()
+    {
         $parent = Tab::getIdFromClassName('AdminParentPayment');
         if ($parent !== false) {
             return $parent;
         }
+
         return 0;
     }
 
@@ -224,7 +240,7 @@ class AvardaPayments extends PaymentModule
      */
     public function getContent()
     {
-        Tools::redirectAdmin($this->context->link->getAdminLink('AdminAvardaPaymentsBackend').'#/settings');
+        Tools::redirectAdmin($this->context->link->getAdminLink('AdminAvardaPaymentsBackend') . '#/settings');
     }
 
     /**
@@ -235,13 +251,14 @@ class AvardaPayments extends PaymentModule
         if (!$this->settings) {
             $this->settings = new \AvardaPayments\Settings();
         }
+
         return $this->settings;
     }
 
     /**
      * @return array|null
      */
-    public function hookPaymentOptions()
+    public function hookPaymentOptions($params)
     {
         if (!$this->active) {
             return null;
@@ -255,8 +272,8 @@ class AvardaPayments extends PaymentModule
 
         // If settings has not module information.
         if (!$settings->getModuleInfo()) {
-            $moduleName = "Avarda";
-            $moduleDescription = "Payment option";
+            $moduleName = 'Avarda';
+            $moduleDescription = 'Payment option';
         } else {
             $moduleInfo = $settings->getModuleInfo();
 
@@ -265,58 +282,73 @@ class AvardaPayments extends PaymentModule
         }
 
         // In case of default name, use variables that might have translations
-        if($moduleName === 'Avarda') {
+        if ($moduleName === 'Avarda') {
             $moduleName = $this->moduleNameTranslatable;
         }
 
-        if($moduleDescription === 'Payment option') {
+        if ($moduleDescription === 'Payment option') {
             $moduleDescription = $this->moduleDescriptionTranslatable;
-        }  
+        }
 
         // Looks weird but we need to parse new line from json to enter to make css pre-line work.
         $parsedModuleDescription = str_replace('\n', '
         ', $moduleDescription);
-        $logoDir =  _PS_MODULE_DIR_ . $this->name . '/uploads';
-				foreach (new DirectoryIterator($logoDir) as $file) {
-					if($file->isDot()) continue;
-					$logo = $file->getFilename();
-				}
-	
-				$logoUrl = _MODULE_DIR_ . $this->name . '/uploads/' . $logo;
+
+        $logoUrl = null;
+        try {
+            // TODO: this requires refactoring. This just goes through the folder and gets one of the images
+            $logoDir = _PS_MODULE_DIR_ . $this->name . '/uploads';
+            $logo = null;
+            foreach (new DirectoryIterator($logoDir) as $file) {
+                if ($file->isDot()) {
+                    continue;
+                }
+                $logo = $file->getFilename();
+            }
+            if($logo) {
+                $logoUrl = _MODULE_DIR_ . $this->name . '/uploads/' . $logo;
+            }
+        } catch (Exception $e) {
+            // there is no point on spamming the log with this
+            //PrestaShopLogger::addLog('avardapayments - hookPaymentOptions image loading failed: ' . $e->getMessage(), 2);
+        }
         $this->smarty->assign('logoUrl', $logoUrl);
+
         $this->smarty->assign('description', $parsedModuleDescription);
         $option = new PaymentOption();
         $option->setCallToActionText($moduleName)
             ->setAction($this->context->link->getModuleLink($this->name, 'checkout', [], true))
-            ->setAdditionalInformation($this->display(__FILE__, 'views/templates/hook/payment-option.tpl'));
+            ->setAdditionalInformation($this->display(__FILE__, 'views/templates/hook/payment-option.tpl'))
+            ->setLogo(null);
 
         return [
-            $option
+            $option,
         ];
     }
 
     /**
      * @param $params
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      * @throws \AvardaPayments\AvardaException
      */
     public function hookActionOrderStatusUpdate($params)
     {
-        if (! isset($params['newOrderStatus'])) {
+        if (!isset($params['newOrderStatus'])) {
             return;
         }
-        if (! isset($params['id_order'])) {
+        if (!isset($params['id_order'])) {
             return;
         }
         $orderState = $params['newOrderStatus'];
-        if (! Validate::isLoadedObject($orderState)) {
+        if (!Validate::isLoadedObject($orderState)) {
             return;
         }
-        if ($this->getSettings()->getDeliveryStatus() !== (int)$orderState->id) {
+        if ($this->getSettings()->getDeliveryStatus() !== (int) $orderState->id) {
             return;
         }
-        $id_order = (int)$params['id_order'];
+        $id_order = (int) $params['id_order'];
         $order = new Order($id_order);
         if (Validate::isLoadedObject($order)) {
             $session = AvardaSession::getForOrder($order);
@@ -328,43 +360,52 @@ class AvardaPayments extends PaymentModule
 
     /**
      * @param $params
+     *
      * @return string
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      * @throws \AvardaPayments\AvardaException
      */
     public function hookDisplayAdminOrder($params)
     {
-        if (! isset($params['id_order'])) {
+        if (!isset($params['id_order'])) {
             return null;
         }
-        $id_order = (int)$params['id_order'];
+        $id_order = (int) $params['id_order'];
         $order = new Order($id_order);
-        $manager = $this->getOrderManager();
-        if ($manager->isAvardaOrder($order)) {
-            $context = Context::getContext();
-            $langId = (int)$context->language->id;
-            $settings = $this->getSettings();
-            $deliveryStatus = new OrderState($settings->getDeliveryStatus(), $langId);
-            $params = [
-                'avardaApiUrl' => $this->context->link->getAdminLink('AdminAvardaPaymentsBackend'),
-                'avardaOrder' => $order,
-                'avardaStatus' => $manager->getOrderStatus($order),
-                'avardaRemaining' => $manager->getRemainingBalance($order),
-                'avardaCaptured' => $manager->getCapturedBalance($order),
-                'avardaReturned' => $manager->getReturnedBalance($order),
-                'avardaCanceled' => $manager->getCanceledBalance($order),
-                'avardaCanReturn' => $manager->canReturn($order),
-                'avardaTransactions' => AvardaTransaction::getForOrder($order, true),
-                'avardaDeliveryStatus' => $deliveryStatus->name,
-            ];
-            Context::getContext()->smarty->assign($params);
-            return $this->display(__FILE__, 'admin-order.tpl');
+        try {
+            $manager = $this->getOrderManager();
+        } catch (Exception $e) {
+            // this can happen quite a lot, no point in logging this (at least here)
+            return null;
         }
+        if (!$manager->isAvardaOrder($order)) {
+            return null;
+        }
+        $context = Context::getContext();
+        $langId = (int) $context->language->id;
+        $settings = $this->getSettings();
+        $deliveryStatus = new OrderState($settings->getDeliveryStatus(), $langId);
+        $params = [
+            'avardaApiUrl' => $this->context->link->getAdminLink('AdminAvardaPaymentsBackend'),
+            'avardaOrder' => $order,
+            'avardaStatus' => $manager->getOrderStatus($order),
+            'avardaRemaining' => $manager->getRemainingBalance($order),
+            'avardaCaptured' => $manager->getCapturedBalance($order),
+            'avardaReturned' => $manager->getReturnedBalance($order),
+            'avardaCanceled' => $manager->getCanceledBalance($order),
+            'avardaCanReturn' => $manager->canReturn($order),
+            'avardaTransactions' => AvardaTransaction::getForOrder($order, true),
+            'avardaDeliveryStatus' => $deliveryStatus->name,
+        ];
+        Context::getContext()->smarty->assign($params);
+        return $this->display(__FILE__, 'admin-order.tpl');
     }
 
     /**
      * @param array $params
+     *
      * @throws \AvardaPayments\AvardaException
      */
     public function hookActionProductCancel($params)
@@ -411,7 +452,7 @@ class AvardaPayments extends PaymentModule
                     $amount = $orderDetail['unit_price_tax_incl'] * $qty;
                     $items[] = [
                         'Amount' => \AvardaPayments\Utils::roundPrice($amount),
-                        'Description' => \AvardaPayments\Utils::maxChars(sprintf($this->l('Return: %s x %s'), $qty, $orderDetail['product_name']), 35)
+                        'Description' => \AvardaPayments\Utils::maxChars(sprintf($this->l('Return: %s x %s'), $qty, $orderDetail['product_name']), 35),
                     ];
                 }
 
@@ -422,6 +463,7 @@ class AvardaPayments extends PaymentModule
 
     /**
      * @return \AvardaPayments\OrderManager
+     *
      * @throws \AvardaPayments\AvardaException
      */
     public function getOrderManager()
@@ -431,12 +473,14 @@ class AvardaPayments extends PaymentModule
 
     /**
      * @return \AvardaPayments\Api
+     *
      * @throws \AvardaPayments\AvardaException
      */
     public function getApi()
     {
         $settings = $this->getSettings();
         $credentials = $settings->getCredentials();
+
         return new \AvardaPayments\Api($settings->getMode(), $credentials['code'], $credentials['password']);
     }
 
@@ -446,17 +490,20 @@ class AvardaPayments extends PaymentModule
     public function getTranslations()
     {
         $translations = new \AvardaPayments\AppTranslation($this);
+
         return $translations->getTranslations();
     }
 
     /**
      * @param $relative
+     *
      * @return string
      */
-    public function getPath($relative) {
+    public function getPath($relative)
+    {
         $uri = rtrim($this->getPathUri(), '/');
         $rel = ltrim($relative, '/');
-        return "$uri/$rel";
-    }		
-}
 
+        return "$uri/$rel";
+    }
+}

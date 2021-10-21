@@ -6,9 +6,8 @@ use PrestaShop\PrestaShop\Core\Foundation\Templating\RenderableProxy;
 
 class OrderController extends OrderControllerCore
 {
-
-    public function initContent() {
-
+    public function initContent()
+    {
         // if store is in catalog mode, return to homepage
         if (Configuration::isCatalogMode()) {
             Tools::redirect('index.php');
@@ -25,13 +24,13 @@ class OrderController extends OrderControllerCore
         $product = $this->context->cart->checkQuantities(true);
         if (is_array($product)) {
             // if there is an issue with product quantities, redirect to cart page
-            $cartLink = $this->context->link->getPageLink('cart', null, null, array('action' => 'show'));
+            $cartLink = $this->context->link->getPageLink('cart', null, null, ['action' => 'show']);
             Tools::redirect($cartLink);
         }
 
         $settings = new \AvardaPayments\Settings();
         //Logger::addLog('OrderController.php - Setting useOnePage: ' . $settings->getUseOnePage(), 1, true, null, true, true);
-        if(!$settings->getUseOnePage()) {
+        if (!$settings->getUseOnePage()) {
             // use default checkout process
             $this->initContentDefault();
         } else {
@@ -39,20 +38,19 @@ class OrderController extends OrderControllerCore
             $url = $this->context->link->getModuleLink(
                 'avardapayments',
                 'opcheckout',
-                array(),
+                [],
                 Tools::usingSecureMode()
             );
             Tools::redirect($url);
         }
-
     }
 
     /**
-    * Original OrderController.php initContent()
-    * Some checks (isCatalogMode(), product count and quantities) have been moved into new initContent()
-    */
-    public function initContentDefault() {
-
+     * Original OrderController.php initContent()
+     * Some checks (isCatalogMode(), product count and quantities) have been moved into new initContent()
+     */
+    public function initContentDefault()
+    {
         $this->restorePersistedData($this->checkoutProcess);
         $this->checkoutProcess->handleRequest(
             Tools::getAllValues()
@@ -86,5 +84,4 @@ class OrderController extends OrderControllerCore
         parent::initContent();
         $this->setTemplate('checkout/checkout');
     }
-
 }

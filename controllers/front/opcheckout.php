@@ -2,17 +2,10 @@
 
 require_once 'checkout.php';
 
-use PrestaShop\PrestaShop\Adapter\Cart\CartPresenter;
-use AvardaPayments\Api;
-use AvardaPayments\AvardaException;
-use AvardaPayments\Utils;
-
-
 class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsCheckoutModuleFrontController
 {
-
-    public function initContent() {
-
+    public function initContent()
+    {
         parent::initContent();
         $settings = $this->module->getSettings();
         $cart = $this->context->cart;
@@ -21,7 +14,7 @@ class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsChecko
         //Checking if we have a shipping option already set before the form
         //$selectedShipping = $cart->getDeliveryOption(null, false, false);
         $selectedShippingOptionID = '';
-        $shippingOptions = array();
+        $shippingOptions = [];
         if (static::validCart($cart)) {
             $shippingOptions = $this->getShippingOptions($cart, $carrierAddress);
             $this->setTemplate('module:avardapayments/views/templates/front/opcheckout.tpl');
@@ -29,18 +22,18 @@ class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsChecko
             $this->setError($this->module->l('Empty cart'));
         }
         //Get gift options here from admin
-        $gift = (int)Configuration::get('PS_GIFT_WRAPPING');
+        $gift = (int) Configuration::get('PS_GIFT_WRAPPING');
         $wrappingFeesTaxInc = 0;
         $giftMessage = '';
         $giftLabel = '';
         //Default cost for wrapping is free
-        if($gift) {
+        if ($gift) {
             $wrappingFeesTaxInc = $cart->getGiftWrappingPrice(true, $carrierAddress);
-            if($wrappingFeesTaxInc <= 0) {
+            if ($wrappingFeesTaxInc <= 0) {
                 //Default cost for wrapping is free
                 $wrappingFeesTaxInc = $this->getTranslator()->trans('(Ilmainen)', [], 'Shop.Theme.Checkout');
             }
-            if($cart->getGiftWrappingPrice(true, $carrierAddress) > 0) {
+            if ($cart->getGiftWrappingPrice(true, $carrierAddress) > 0) {
                 $wrappingFeesTaxInc = $cart->getGiftWrappingPrice(true, $carrierAddress);
             }
             $giftLabel = $this->getTranslator()->trans(
@@ -50,23 +43,22 @@ class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsChecko
             $giftMessage = $cart->gift_message;
             $isGift = $cart->gift;
 
-            $giftArray = array(
+            $giftArray = [
                 'message' => $giftMessage,
                 'isGift' => $isGift,
                 'wrappingFeesTaxInc' => $wrappingFeesTaxInc,
                 'enabled' => $gift,
-                'label' => $giftLabel
-            );
+                'label' => $giftLabel,
+            ];
         } else {
-            $giftArray = array(
-                'enabled' => false
-            );
+            $giftArray = [
+                'enabled' => false,
+            ];
         }
-        
-        
-        $recyclable = (int)Configuration::get('PS_RECYCLABLE_PACK');
+
+        $recyclable = (int) Configuration::get('PS_RECYCLABLE_PACK');
         $carrierTpl = 'module:avardapayments/views/templates/front/carriers.tpl';
-        
+
         $this->context->smarty->assign([
             'showCart' => $settings->showCart(),
             'shippingOptions' => $shippingOptions,
@@ -75,14 +67,14 @@ class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsChecko
             'addressId' => $addressId,
             'recyclable' => $recyclable,
             'giftArray' => $giftArray,
-        ]);        
-        
+        ]);
     }
 
-    protected function retrieveAddressId($cart) {
+    protected function retrieveAddressId($cart)
+    {
         $addressId = -1;
-        
-        if($cart->id_address_delivery) {
+
+        if ($cart->id_address_delivery) {
             $addressId = $cart->id_address_delivery;
         }
 

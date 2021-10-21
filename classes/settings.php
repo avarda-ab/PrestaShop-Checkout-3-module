@@ -19,13 +19,12 @@
 
 namespace AvardaPayments;
 
-use \Configuration;
+use Configuration;
 
 class Settings
 {
     const SETTINGS = 'AVARDA_SETTINGS';
     const BACKEND_APP_URL = 'AVARDA_BACK_URL';
-
 
     private $data;
 
@@ -51,21 +50,21 @@ class Settings
             'credentials' => [
                 'test' => [
                     'code' => '',
-                    'password' => ''
+                    'password' => '',
                 ],
                 'production' => [
                     'code' => '',
-                    'password' => ''
-                ]
+                    'password' => '',
+                ],
             ],
-            'showCart' => true,
+            'showCart' => false,
             'completedStatus' => 2,
             'deliveryStatus' => 5,
             'useOnePage' => 0,
             'moduleInfo' => [
-                "moduleName" => "Avarda",
-                "moduleDescription" => "Payment module"
-            ]
+                'moduleName' => 'Avarda',
+                'moduleDescription' => 'Payment module',
+            ],
         ];
     }
 
@@ -83,6 +82,7 @@ class Settings
     public function getCredentials()
     {
         $mode = $this->getMode();
+
         return $this->get(['credentials', $mode]);
     }
 
@@ -96,7 +96,8 @@ class Settings
         $mode = $this->getMode();
         $code = $this->get(['credentials', $mode, 'code']);
         $password = $this->get(['credentials', $mode, 'password']);
-        return ($code && $password);
+
+        return $code && $password;
     }
 
     /**
@@ -109,21 +110,22 @@ class Settings
 
     public function getCompletedStatus()
     {
-        return (int)$this->get(['completedStatus']);
+        return (int) $this->get(['completedStatus']);
     }
 
     public function getDeliveryStatus()
     {
-        return (int)$this->get(['deliveryStatus']);
+        return (int) $this->get(['deliveryStatus']);
     }
 
     public function getUseOnePage()
     {
-        return !!$this->get(['useOnePage']);
+        return (bool) $this->get(['useOnePage']);
     }
 
     /**
      * Returns true if we run in test mode
+     *
      * @return bool
      */
     public function isTestMode()
@@ -144,7 +146,7 @@ class Settings
      */
     public function showCart()
     {
-        return !!$this->get(['showCart']);
+        return (bool) $this->get(['showCart']);
     }
 
     /**
@@ -176,11 +178,13 @@ class Settings
     {
         $this->data = null;
         Configuration::deleteByName(self::SETTINGS);
+
         return true;
     }
 
     /**
      * @param null $path
+     *
      * @return array|mixed
      */
     public function get($path = null)
@@ -193,9 +197,10 @@ class Settings
             if (isset($value[$key])) {
                 $value = $value[$key];
             } else {
-                die('Avarda: setting not found: ' . implode($path, '>'));
+                exit('Avarda: setting not found: ' . implode($path, '>'));
             }
         }
+
         return $value;
     }
 
@@ -204,6 +209,7 @@ class Settings
      *
      * @param array $left
      * @param array $right
+     *
      * @return array
      */
     private static function mergeSettings($left, $right)
@@ -219,6 +225,7 @@ class Settings
             }
             $ret[$key] = $value;
         }
+
         return $ret;
     }
 
@@ -226,16 +233,19 @@ class Settings
      * Updates settings value
      *
      * @param mixed $value
+     *
      * @return bool
      */
     public function set($value)
     {
         $this->data = $value;
+
         return Configuration::updateValue(self::SETTINGS, json_encode($value));
     }
 
     /**
      * @param \AvardaPayments $module
+     *
      * @return string
      */
     public function getBackendAppUrl($module)
@@ -245,16 +255,17 @@ class Settings
             $version = self::getUnderscoredVersion($module);
             $url = $module->getPath("views/js/back-{$version}.js");
         }
+
         return $url;
     }
 
     /**
      * @param $module
+     *
      * @return mixed
      */
     private static function getUnderscoredVersion($module)
     {
         return str_replace('.', '_', $module->version);
     }
-
 }
