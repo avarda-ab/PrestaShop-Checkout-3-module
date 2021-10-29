@@ -52,7 +52,7 @@ jobs:
       - name: Create zip package
         run: |
           mkdir -p release
-          rsync -arv --exclude='release' --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='lib/autoindex/' . ./release/${{ steps.get_reponame.outputs.REPONAME }}/
+          rsync -arv --exclude='release' --exclude='.git/' --exclude='.github/' --exclude='_dev/' --exclude='.gitignore' --exclude='lib/autoindex/' . ./release/${{ steps.get_reponame.outputs.REPONAME }}/
           cd release
           zip -r ${{ steps.get_reponame.outputs.REPONAME }}-${{ steps.get_version.outputs.VERSION }}.zip ${{ steps.get_reponame.outputs.REPONAME }}
 
