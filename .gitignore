@@ -3,3 +3,4 @@
 .php_cs.dist
 vendor/
 uploads/
+/_dev/back/node_modules/
