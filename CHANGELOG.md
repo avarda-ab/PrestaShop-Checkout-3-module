@@ -1,5 +1,11 @@
 20230203 - revulondigital
 ========
+* Edited changelog
+* Changed version number to 4.2.1 for next release
+
+
+20230203 - revulondigital
+========
 * Fixed a problem with duplicate orders
 * Fixed an issue with client data
 * Added module functionality logging
