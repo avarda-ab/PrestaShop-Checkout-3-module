@@ -65,7 +65,54 @@ class Settings
                 'moduleName' => 'Avarda',
                 'moduleDescription' => 'Payment module',
             ],
+            'global' => [
+                'credentials' => [
+                    'test' => [
+                        'code' => '',
+                        'password' => '',
+                    ],
+                    'production' => [
+                        'code' => '',
+                        'password' => '',
+                    ],
+                ],
+                'bindings' => '',
+            ],
+            'user_logo_filename' => '',
         ];
+    }
+
+    /**
+     * @return array
+     */
+    public function getGlobalPaymentCredentials()
+    {
+        return $this->get(['global', 'credentials', $this->getMode()]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasGlobalPaymentCredentials()
+    {
+        $mode = $this->getMode();
+        $code = $this->get(['global', 'credentials', $mode, 'code']);
+        $password = $this->get(['global', 'credentials', $mode, 'password']);
+
+        return $code && $password;
+    }
+
+    /**
+     * @return array
+     */
+    public function getGlobalPaymentBindings()
+    {
+        $result = @json_decode($this->get(['global', 'bindings']), true);
+        if (!is_array($result)) {
+            return [];
+        }
+
+        return $result;
     }
 
     /**
@@ -197,7 +244,7 @@ class Settings
             if (isset($value[$key])) {
                 $value = $value[$key];
             } else {
-                exit('Avarda: setting not found: ' . implode($path, '>'));
+                exit('Avarda: setting not found: ' . implode('>', $path));
             }
         }
 
@@ -238,9 +285,9 @@ class Settings
      */
     public function set($value)
     {
-        $this->data = $value;
+        $this->data = self::mergeSettings($this->data, $value);
 
-        return Configuration::updateValue(self::SETTINGS, json_encode($value));
+        return Configuration::updateValue(self::SETTINGS, json_encode($this->data));
     }
 
     /**

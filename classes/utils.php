@@ -318,7 +318,7 @@ class Utils
         return $str ? $str : '';
     }
 
-    public function truncateValue($string, $length, $name = false)
+    public static function truncateValue($string, $length, $name = false)
     {
         // if string is name, remove numbers and non-word characters except '-'
         if ($name) {

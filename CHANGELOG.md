@@ -1,3 +1,15 @@
+20230203 - revulondigital
+========
+* Fixed a problem with duplicate orders
+* Fixed an issue with client data
+* Added module functionality logging
+* Refactoring
+* Added support for Global Payment with binding to the current language
+* Upped version number to 4.2.0
+* Fixed bug in cart item list
+* Fixed bug with country in PrestaShop addresses
+
+
 20211020 - oliver-avarda
 ========
 * Edited changelog

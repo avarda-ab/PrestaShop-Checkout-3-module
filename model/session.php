@@ -35,8 +35,9 @@ class AvardaSession extends ObjectModel
             'purchase_token' => ['type' => self::TYPE_STRING],
             'purchase_expire_timestamp' => ['type' => self::TYPE_DATE],
             'cart_signature' => ['type' => self::TYPE_STRING, 'required' => true],
-            'status' => ['type' => self::TYPE_STRING, 'required' => true, 'values' => ['new', 'processing', 'completed', 'error']],
+            'status' => ['type' => self::TYPE_STRING, 'required' => true, 'values' => ['new', 'processing', 'completed', 'error', 'canceled']],
             'mode' => ['type' => self::TYPE_STRING, 'required' => true, 'values' => ['test', 'production']],
+            'global' => ['type' => self::TYPE_BOOL, 'required' => true, 'validate' => 'isBool'],
             'info' => ['type' => self::TYPE_STRING],
             'error_message' => ['type' => self::TYPE_STRING],
             'date_add' => ['type' => self::TYPE_DATE],
@@ -63,6 +64,7 @@ class AvardaSession extends ObjectModel
     public $error_message;
     public $info;
     public $mode;
+    public $global;
     public $date_add;
     public $date_upd;
     public $create_customer;
@@ -110,13 +112,14 @@ class AvardaSession extends ObjectModel
      * Returns active session for given cart, or creates new one
      *
      * @param Cart $cart
-     * @param $mode
+     * @param string $mode
+     * @param bool $global
      *
      * @return AvardaSession
      *
      * @throws Exception
      */
-    public static function getForCart(Cart $cart, $mode)
+    public static function getForCart(Cart $cart, $mode, $global)
     {
         static::markExpired();
         $cartId = (int) $cart->id;
@@ -142,6 +145,7 @@ class AvardaSession extends ObjectModel
             $session->cart_signature = Utils::getCartInfoSignature(Utils::getCartInfo($cart));
             $session->status = 'new';
             $session->mode = $mode;
+            $session->global = (int)((bool)$global);
             if (!$session->add()) {
                 throw new Exception('Failed to create new avarda session');
             }

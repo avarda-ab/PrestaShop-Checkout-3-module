@@ -19,6 +19,7 @@
 
 namespace AvardaPayments;
 
+use AvardaPayments;
 use AvardaSession;
 use AvardaTransaction;
 use Exception;
@@ -27,8 +28,10 @@ use PrestaShopException;
 
 class OrderManager
 {
-    /** @var Api */
-    private $api;
+    /**
+     * @var AvardaPayments
+     */
+    private $module;
 
     /** @var string last error */
     private $error;
@@ -41,11 +44,11 @@ class OrderManager
     /**
      * OrderManager constructor.
      *
-     * @param Api $api
+     * @param AvardaPayments $module
      */
-    public function __construct(Api $api)
+    public function __construct(AvardaPayments $module)
     {
-        $this->api = $api;
+        $this->module = $module;
     }
 
     /**
@@ -93,8 +96,8 @@ class OrderManager
     {
         if ($this->canDeliver($order)) {
             return $this->executeTransaction(
-                function ($purchaseId, Order $order) {
-                    return $this->api->createPurchaseOrder($order->reference, $purchaseId, $this->getOrderItems($order), $order->getWsShippingNumber());
+                function (AvardaSession $session, Order $order) {
+                    return $this->module->getApi($session->global)->createPurchaseOrder($order->reference, $session->purchase_id, $this->getOrderItems($order), $order->getWsShippingNumber());
                 },
                 AvardaTransaction::TRANSACTION_DELIVERY,
                 $order->total_paid_tax_incl,
@@ -117,10 +120,10 @@ class OrderManager
     {
         if ($this->canRefund($order)) {
             return $this->executeTransaction(
-                function ($purchaseId, Order $order) use ($amount) {
+                function (AvardaSession $session, Order $order) use ($amount) {
                     return is_null($amount)
-                        ? $this->api->refundRemaining($order->reference, $purchaseId)
-                        : $this->api->refundAmount($order->reference, $purchaseId, $amount);
+                        ? $this->module->getApi($session->global)->refundRemaining($order->reference, $session->purchase_id)
+                        : $this->module->getApi($session->global)->refundAmount($order->reference, $session->purchase_id, $amount);
                 },
                 AvardaTransaction::TRANSACTION_REFUND,
                 is_null($amount) ? $this->getRemainingBalance($order) : $amount,
@@ -163,8 +166,8 @@ class OrderManager
             $amount = Utils::roundPrice($amount);
 
             return $this->executeTransaction(
-                function ($purchaseId, Order $order) use ($items) {
-                    return $this->api->returnItems($order->reference, $purchaseId, $items);
+                function (AvardaSession $session, Order $order) use ($items) {
+                    return $this->module->getApi($session->global)->returnItems($order->reference, $session->purchase_id, $items);
                 },
                 AvardaTransaction::TRANSACTION_RETURN,
                 $amount,
@@ -187,12 +190,12 @@ class OrderManager
     {
         if ($this->canCancel($order)) {
             return $this->executeTransaction(
-                function ($purchaseId) use ($reason) {
+                function (AvardaSession $session) use ($reason) {
                     if (!$reason) {
                         $reason = 'I do not want this item anymore';
                     }
 
-                    return $this->api->cancelPayment($purchaseId, $reason);
+                    return $this->module->getApi($session->global)->cancelPayment($session->purchase_id, $reason);
                 },
                 AvardaTransaction::TRANSACTION_CANCEL,
                 $this->getRemainingBalance($order),
@@ -215,9 +218,9 @@ class OrderManager
     {
         $this->error = null;
         try {
-            $purchaseId = $this->getPurchaseId($order);
+            $session = $this->getSession($order);
             if (is_callable($callable)) {
-                call_user_func($callable, $purchaseId, $order);
+                call_user_func($callable, $session, $order);
                 // This is a callback for executable functions
             }
         } catch (Exception $e) {
@@ -245,17 +248,16 @@ class OrderManager
     {
         $items = array_map(function ($row) {
             return [
-                'description' => Utils::maxChars($row['product_name'], 35),
+                'description' => Utils::maxChars($row['product_quantity'] . ' x ' . $row['product_name'], 35),
                 'amount' => strval(Utils::roundPrice($row['total_price_tax_incl'])),
                 'taxAmount' => strval(Utils::roundPrice($row['total_price_tax_incl']) - Utils::roundPrice($row['total_price_tax_excl'])),
-                'quantity' => (int) $row['product_quantity'],
             ];
         }, $order->getProductsDetail());
 
         if ($order->total_discounts_tax_incl !== 0) {
             $items[] = [
                 'description' => 'Discount',
-                'amount' => strval(Utils::roundPrice(-1 * $order->total_discounts)),
+                'amount' => strval(Utils::roundPrice(-1 * $order->total_discounts_tax_incl)),
                 'taxAmount' => strval(Utils::roundPrice(-1 * $order->total_discounts_tax_incl) - Utils::roundPrice(-1 * $order->total_discounts_tax_excl)),
             ];
         }
@@ -298,18 +300,18 @@ class OrderManager
     /**
      * @param Order $order
      *
-     * @return string
+     * @return AvardaSession
      *
      * @throws AvardaException
      */
-    private function getPurchaseId(Order $order)
+    private function getSession(Order $order)
     {
         $session = AvardaSession::getForOrder($order);
         if (!$session) {
             throw new AvardaException('No avarda session associated with order ' . (int) $order->id);
         }
 
-        return $session->purchase_id;
+        return $session;
     }
 
     public function canDeliver($order)

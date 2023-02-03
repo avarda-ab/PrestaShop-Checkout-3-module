@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `PREFIX_avarda_session` (
   `cart_signature`   VARCHAR(64) NOT NULL,
   `status`           VARCHAR(20) NOT NULL,
   `mode`             VARCHAR (10) NOT NULL,
+  `global`           TINYINT(1) NOT NULL,
   `info`             TEXT,
   `error_message`    TEXT,
   `date_add`         DATETIME NOT NULL,

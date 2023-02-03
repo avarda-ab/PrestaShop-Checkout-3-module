@@ -2,6 +2,8 @@
 
 require_once 'checkout.php';
 
+use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
+
 class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsCheckoutModuleFrontController
 {
     public function initContent()
@@ -11,12 +13,21 @@ class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsChecko
         $cart = $this->context->cart;
         $addressId = $this->retrieveAddressId($cart);
         $carrierAddress = new Address($addressId);
+        
+        $deliveryOptionsFinder = new DeliveryOptionsFinder(
+            $this->context,
+            $this->getTranslator(),
+            $this->objectPresenter,
+            new PriceFormatter()
+        );
+
         //Checking if we have a shipping option already set before the form
         //$selectedShipping = $cart->getDeliveryOption(null, false, false);
         $selectedShippingOptionID = '';
         $shippingOptions = [];
         if (static::validCart($cart)) {
-            $shippingOptions = $this->getShippingOptions($cart, $carrierAddress);
+            // $shippingOptions = $this->getShippingOptions($cart, $carrierAddress);
+            $shippingOptions = $deliveryOptionsFinder->getDeliveryOptions();
             $this->setTemplate('module:avardapayments/views/templates/front/opcheckout.tpl');
         } else {
             $this->setError($this->module->l('Empty cart'));
@@ -62,8 +73,10 @@ class AvardaPaymentsOpcheckoutModuleFrontController extends AvardaPaymentsChecko
         $this->context->smarty->assign([
             'showCart' => $settings->showCart(),
             'shippingOptions' => $shippingOptions,
+            'delivery_option' => $deliveryOptionsFinder->getSelectedDeliveryOption(),
             'carrierTpl' => $carrierTpl,
             'avardaCheckoutUrl' => $this->context->link->getModuleLink($this->module->name, 'opcheckout'),
+            'avardaRedirectUrl' => $this->context->link->getModuleLink($this->module->name, 'opcheckout'),
             'addressId' => $addressId,
             'recyclable' => $recyclable,
             'giftArray' => $giftArray,

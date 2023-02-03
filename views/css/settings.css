@@ -1,0 +1,40 @@
+.avarda_session .session-list-link {
+    color: #656565;
+    text-decoration: underline;
+}
+.avarda_session .session-list-link:hover {
+    color: #65656588;
+}
+.avarda_session .session-status {
+    display: inline-block;
+    padding: 3px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+.avarda_session .session-status-new,
+.avarda_session .session-status-processing {
+    color: #1e94ab;
+    background-color: #dcf4f9;
+    border-color: #4ac7e0;
+}
+.avarda_session .session-status-completed {
+    color: #72c279;
+    background-color: #ddf0de;
+    border-color: #92d097;
+}
+.avarda_session .session-status-canceled,
+.avarda_session .session-status-expired {
+    color: #d2a63c;
+    background-color: #fff3d7;
+    border-color: #fcc94f;
+}
+.avarda_session .session-status-error {
+    color: #d27c82;
+    background-color: #ffe2e4;
+    border-color: #eab3b7;
+}
+.avarda_session .session-status-unknown {
+    color: #656565;
+    background-color: #fff;
+    border-color: #656565;
+}

@@ -9,12 +9,12 @@
     {/if}
 
     {* render cart information *}
-    {if $showCart && isset($cart)}
-        <div class="row">
+    {*{if $showCart && isset($cart)}*}
+        <div class="row ostokset" id="ostos">
             {* cart products detailed *}
             <div class="cart-grid-body col-xs-12 col-lg-8">
                 <div class="card cart-container">
-                    <div class="card-block">
+                    <div class="card-block" style="padding-top: 0;">
                         <h1>{l s='Checkout' mod='avardapayments'}</h1>
                     </div>
                     <hr class="separator">
@@ -37,17 +37,24 @@
                 {/block}
             </div>
         </div>
-    {/if}
+    {*{/if}*}
 
     {if $avardaPurchaseToken == ''}
         {*/
         $purchaseId was not set, which means we don't have a purchaseId -> customer info is missing
         Add fields to ask for email and zipcode, then pass them to controller
     /*}
+    <div class="viimeistely">
+        <h1>Viimeistele tilauksesi</h1>
+        <hr class="separator">
+    </div>
         <div class="container card p-2">
-            <h2>{l s='Email and Zip Code' mod='avardapayments'}</h2>
+            <div class="avardaheader">
+                <div class="headerback"></div>
+                <h2>1. {l s='Email and Zip Code' mod='avardapayments'}</h2>
+            </div>
             <div class="d-flex">
-                <label>{l s='Email' d='Shop.Forms.Labels'}</label>
+                <label>Tilaajan {l s='Email' d='Shop.Forms.Labels'}</label>
                 <br>
                 <label class="error" id="error-email">{l s='Invalid email' mod='avardapayments'}</label>
                 <input class="w-100 p-1" type="email" name="email" id="opc-email"
@@ -57,8 +64,12 @@
                 <label>{l s='Zip/Postal Code' d='Shop.Forms.Labels'}</label>
                 <br>
                 <label class="error" id="error-zip">{l s='Invalid ZIP Code' mod='avardapayments'}</label>
-                <input class="w-100 p-1" type="number" name="zip" id="opc-zip"
-                    placeholder="{l s='Zip/Postal Code' d='Shop.Forms.Labels'}" required>
+                <input class="w-100 p-1" 
+                        type="number" name="zip" id="opc-zip"
+                        placeholder="{l s='Zip/Postal Code' d='Shop.Forms.Labels'}" 
+                        maxlength="5" 
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" 
+                        required>
             </div>
             <button class="btn btn-primary mt-1" onclick="submitInfo()">
                 {l s='Continue' d='Shop.Theme.Actions'}
@@ -104,14 +115,25 @@
         </script>
         {*/strip*}
     {else}
+    <div class="viimeistely" id="viime">
+        <h1>Viimeistele tilauksesi</h1>
+        <hr class="separator">
+    </div>
         <div id="checkout-options">
             <div class="card p-2">
                 {* Render carriers here *}
-                <label class="error" id="error-carrier">{l s='Select Carrier' mod='avardapayments'}</label>
+                <div class="avardaheader">
+                    <div class="headerback"></div>
+                    <label class="error" id="error-carrier">2. {l s='Select Carrier' mod='avardapayments'}</label>
+                </div>
                 {include file=$carrierTpl delivery_options=$shippingOptions id_address=$addressId delivery_message='' recyclablePackAllowed=$recyclable gift=$giftArray}
             </div>
-            {if !$customer.is_logged or $customer.is_guest or !$customer.newsletter}
+            {*{if !$customer.is_logged or $customer.is_guest or !$customer.newsletter}
                 <div class="card p-2">
+                    <div class="avardaheader">
+                        <div class="headerback"></div>
+                       <h1 class="title">3. Rekisteröidy ja tilaa uutiskirje (valinnainen)</h1>
+                    </div>
                     {if !$customer.is_logged or $customer.is_guest}
                         <div class="container-checkbox">
                             <input type="checkbox" id="createUser" name="createuser" value="true" onchange="togglePassword()"
@@ -143,7 +165,7 @@
                         value="Change language">
                     -->
                 </div>
-            {/if}
+            {/if}*}
         </div>
         {strip}
             <script>
@@ -170,10 +192,30 @@
         {/strip}
 
         <div class="card" id="avarda-checkout">
+            <div class="avardaheader">
+                <div class="headerback"></div>
+                <h1 class="title">3. {l s='Payment' d='Shop.Theme.Checkout'}</h1>
+            </div>
         </div>
+
+        {* <div class="loader-wrapper">
+            <span class="loader">
+                
+            </span>
+        </div> *}
+        <script type="text/javascript">
+            //$(window).on("load",function(){
+            //$(".loader-wrapper").fadeOut("slow");
+            //});
+
+            //$(document).ready(function() {
+            //    $(".loader-wrapper").fadeOut("slow");
+            //});
+        </script>
 
         {*strip*}
         <script>
+            /*
             function avardaValidate() {
               console.log('avardaValidate()');
               try {
@@ -203,12 +245,23 @@
                 console.log(err);
               }
             }
+            //*/
+
+            /*
+            var processingRequestCreateUser = false;
 
             function postProcessing() {
+              if (processingRequestCreateUser) {
+                return;
+              }
+
+              processingRequestCreateUser = true;
+              //*
               $.post("{$avardaCheckoutUrl nofilter}", {
                 ajax: true,
                 action: 'createuser',
               }).done(function(response) {
+                processingRequestCreateUser = false;
                 console.log('done() - response: ' + response);
                 if (response.indexOf('http') === 0) {
                   window.location.href = response;
@@ -217,11 +270,14 @@
                 }
               });
             }
+            //*/
 
             function setCustomerTokenCallback(customerToken) {
               console.log('setCustomerTokenCallback called, hiding other checkout options');
               // we are abusing this call back to hide the shipping methods so they don't confuse anymore
               document.querySelector('#checkout-options').style.display = 'none';
+              document.querySelector('#ostos').style.display = 'none';
+              document.querySelector('#viime').style.display = 'none';
             }
 
             function updateCarrier() {
@@ -236,9 +292,9 @@
                     action: 'updatecarrier',
                     idCarrier: carrier_id,
                 }).done(function(response) {
-                    window.location.hash = '#';
-                    window.location.hash = '#avarda-checkout';
-                    window.location.reload(true);
+                    // window.location.hash = '#';
+                    // window.location.hash = '#avarda-checkout';
+                    // window.location.reload(true);
                 });
             }
 
@@ -338,20 +394,67 @@
                     r.parentNode.insertBefore(i, r)
                 })(window, document, "script", "avardaCheckoutInit", "avardaCheckout", "1.0.0", initUrl);
 
-                var sessionTimedOutCallback = function(avardaCheckoutInstance) {
-                    //This is required
-                    //console.log("Session Timed Out - Handle here!")
+                var completedPurchaseCallback = function(checkoutInstance) {
+                    $.ajax({
+                        url: '{$avardaCheckoutUrl nofilter}',
+                        type: 'POST',
+                        data: {
+                            ajax: true,
+                            action: 'create_order',
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (typeof response.url !== 'undefined') {
+                                window.location.href = response.url;
+                            } else if (typeof response.error !== 'undefined') {
+                                console.log('[create_order] Error: ' + response.error);
+                            }
+                        }
+                    });
+                }
+
+                var sessionTimedOutCallback = function(checkoutInstance) {
+                    window.location.reload();
                 };
+
+                var beforeSubmitCallback = function(payload, checkoutInstance) {
+                    var $deliveryOption = $('input.delivery-option:checked');
+                    var $deliveryMessage = $('#delivery_message');
+
+                    $.ajax({
+                        url: '{$avardaCheckoutUrl nofilter}',
+                        type: 'POST',
+                        data: {
+                            ajax: true,
+                            action: 'update_context',
+                            id_carrier: $deliveryOption.length ? $deliveryOption.val() : 0,
+                            delivery_message: $deliveryMessage.length ? $deliveryMessage.val() : '',
+                        },
+                        dataType: 'json',
+                        async: false,
+                        success: function(response) {
+                            if ((typeof response.success !== 'undefined') && response.success) {
+                                checkoutInstance.beforeSubmitContinue();
+                            } else {
+                                checkoutInstance.beforeSubmitAbort();
+                                
+                                if (typeof response.error !== 'undefined') {
+                                    console.log('[update_context] Error: ' + response.error);
+                                }
+                            }
+                        }
+                    });
+                }
 
                 window.avardaCheckoutInit({
                     "purchaseJwt": "{$avardaPurchaseToken}",
                     "rootElementId": "avarda-checkout",
-                    "redirectUrl": "{$avardaCheckoutUrl nofilter}",
+                    "redirectUrl": "{$avardaRedirectUrl nofilter}",
                     "styles": {},
                     "disableFocus": true,
-                    "completedPurchaseCallback": postProcessing,
+                    "completedPurchaseCallback": completedPurchaseCallback,
                     "sessionTimedOutCallback": sessionTimedOutCallback,
-                    "beforeSubmitCallback": await preProcessing,
+                    "beforeSubmitCallback": beforeSubmitCallback,
                     "CompletedNotificationUrl": "{$paymentCallbackUrl nofilter}",
                     "setCustomerTokenCallback": setCustomerTokenCallback
                 });

@@ -68,6 +68,7 @@
         </div>
         {*strip*}
         <script>
+            /**
             function avardaValidate() {
               $.post("{$avardaCheckoutUrl nofilter}", {
                 ajax: true,
@@ -87,6 +88,7 @@
                 });
               });
             }
+            //*/
 
             function avardaBootsrap() {
                 let initUrl = ''
@@ -111,21 +113,62 @@
             r.parentNode.insertBefore(i, r)
             })(window, document, "script", "avardaCheckoutInit", "avardaCheckout", "1.0.0", initUrl);
 
+            var completedPurchaseCallback = function(checkoutInstance) {
+                $.ajax({
+                    url: '{$avardaCheckoutUrl nofilter}',
+                    type: 'POST',
+                    data: {
+                        ajax: true,
+                        action: 'create_order',
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (typeof response.url !== 'undefined') {
+                            window.location.href = response.url;
+                        } else if (typeof response.error !== 'undefined') {
+                            console.log('[create_order] Error: ' + response.error);
+                        }
+                    }
+                });
+            }
 
-
-            var sessionTimedOutCallback = function(avardaCheckoutInstance) {
-                //This is required
-                //console.log("Session Timed Out - Handle here!")
+            var sessionTimedOutCallback = function(checkoutInstance) {
+                window.location.reload();
             };
+
+            var beforeSubmitCallback = function(payload, checkoutInstance) {
+                $.ajax({
+                    url: '{$avardaCheckoutUrl nofilter}',
+                    type: 'POST',
+                    data: {
+                        ajax: true,
+                        action: 'update_context',
+                    },
+                    dataType: 'json',
+                    async: false,
+                    success: function(response) {
+                        if ((typeof response.success !== 'undefined') && response.success) {
+                            checkoutInstance.beforeSubmitContinue();
+                        } else {
+                            checkoutInstance.beforeSubmitAbort();
+
+                            if (typeof response.error !== 'undefined') {
+                                console.log('[update_context] Error: ' + response.error);
+                            }
+                        }
+                    }
+                });
+            }
 
             window.avardaCheckoutInit({
                 "purchaseJwt": "{$avardaPurchaseToken}",
                 "rootElementId": "avarda-checkout",
-                "redirectUrl": "{$avardaCheckoutUrl nofilter}",
+                "redirectUrl": "{$avardaRedirectUrl nofilter}",
                 "styles": {},
                 "disableFocus": true,
-                "completedPurchaseCallback": avardaValidate,
+                "completedPurchaseCallback": completedPurchaseCallback,
                 "sessionTimedOutCallback": sessionTimedOutCallback,
+                "beforeSubmitCallback": beforeSubmitCallback,
                 "CompletedNotificationUrl": "{$paymentCallbackUrl nofilter}"
             });
 

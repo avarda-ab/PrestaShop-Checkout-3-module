@@ -231,6 +231,7 @@ class Api
             'mode' => 'B2C',
             'displayItems' => true,
             'differentDeliveryAddress' => $differentDeliveryAddress,
+            'showThankYouPage' => false,
         ];
 
         $localAddresses = [
@@ -243,7 +244,7 @@ class Api
 
         if (!$isLocalhost) {
             $name = $context->controller->module->name;
-            $link = $context->link->getModuleLink($name, 'notificationReceiver');
+            $link = $context->link->getModuleLink($name, 'notification');
             $checkoutSetup['completedNotificationUrl'] = $link;
         }
 

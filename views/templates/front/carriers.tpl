@@ -4,7 +4,10 @@
     {$hookDisplayBeforeCarrier nofilter}
   </div>
 *}
-<h1 class="title">{l s='Shipping' mod='avardapayments'}</h1>
+<div class="avardaheader">
+    <div class="headerback"></div>
+    <h1 class="title">2. {l s='Shipping' mod='avardapayments'}</h1>
+</div>
 <div class="delivery-options-list">
     {if $delivery_options|count}
         <div class="form-fields">
@@ -13,7 +16,7 @@
                   <div class="row delivery-option container-radio">
                     <div class="col-sm-1">
                       <span class="custom-radio float-xs-left">
-                        <input type="radio" name="delivery_option[{$id_address}]" id="delivery_option_{$carrier.id}" value="{$carrier.id}"{if $carrier.preselected} checked{/if} onclick="updateCarrier()">
+                        <input type="radio" name="delivery_option[{$id_address}]" id="delivery_option_{$carrier.id}" value="{$carrier.id}" class="delivery-option"{if $delivery_option == $carrier_id} checked{/if} onclick="updateCarrier()">
                         <span></span>
                       </span>
                     </div>
@@ -39,7 +42,7 @@
                       </div>
                     </label>
                     {if isset($carrier.extraContent)}
-                        <div class="row carrier-extra-content"{if !$carrier.preselected} style="display:none;"{/if}>
+                        <div class="row carrier-extra-content"{if $delivery_option != $carrier_id} style="display:none;"{/if}>
                           {$carrier.extraContent nofilter}
                         </div>
                       {/if}
@@ -48,10 +51,10 @@
               {/foreach}
             </div>
           <div class="order-options">
-            <div id="delivery" class="container-textarea">
+            {*<div id="delivery" class="container-textarea">
               <label for="delivery_message">{l s='If you would like to add a comment about your order, please write it in the field below.' d='Shop.Theme.Checkout'}</label>
               <textarea rows="2" cols="120" id="delivery_message" name="delivery_message">{$delivery_message}</textarea>
-            </div>
+            </div>*}
 
             {if $recyclablePackAllowed}
               <span class="custom-checkbox">

@@ -4,3 +4,5 @@
 vendor/
 uploads/
 /_dev/back/node_modules/
+config.xml
+config*.xml
