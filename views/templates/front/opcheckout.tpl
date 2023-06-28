@@ -374,9 +374,9 @@
             async function avardaBootsrap() {
                 let initUrl = ''
                 if("{$apiEnv}" === 'prod') {
-                    initUrl = "https://avdonl0p0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+                    initUrl = "https://checkout-cdn.avarda.com/cdn/static/js/main.js"
                 } else {
-                    initUrl = "https://avdonl0s0checkout0fe.blob.core.windows.net/frontend/static/js/main.js"
+                    initUrl = "https://stage.checkout-cdn.avarda.com/cdn/static/js/main.js"
                 }
 
                 {literal}
