@@ -81,8 +81,8 @@ class Api
     public function __construct($mode, $client_id, $client_secret)
     {
         $this->server = $mode === 'test'
-            ? 'https://avdonl-s-checkout.avarda.org'
-            : 'https://avdonl-p-checkout.avarda.org';
+            ? 'https://stage.checkout-api.avarda.com'
+            : 'https://checkout-api.avarda.com';
         if (!$client_id || !$client_secret) {
             throw new AvardaException('Credentials are not set');
         }
