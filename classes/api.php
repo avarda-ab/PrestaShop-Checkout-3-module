@@ -276,9 +276,9 @@ class Api
     public function getApiEnv()
     {
         $env = '';
-        if ($this->server === 'https://avdonl-s-checkout.avarda.org') {
+        if ($this->server === 'https://stage.checkout-api.avarda.com') {
             $env = 'test';
-        } elseif ($this->server === 'https://avdonl-p-checkout.avarda.org') {
+        } elseif ($this->server === 'https://checkout-api.avarda.com') {
             $env = 'prod';
         } else {
             throw new AvardaException('API environment not found');
