@@ -128,7 +128,7 @@
 
                             </div>
                         </div>
-                    {elseif $avardaStatus === 2 and $avardaRemaining > 0}
+                    {elseif $avardaStatus === 2}
                         <div class="form form-infline">
                             <h4>{l s='Return item' mod='avardapayments'}</h4>
                             <input type="text" id="avarda-return" name="avarda-return"
