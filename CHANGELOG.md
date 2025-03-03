@@ -1,3 +1,11 @@
+20250303 - Avarda Team
+========
+* Edited changelog
+* Increased collumn size for purchase_token from VARCHAR(300) to VARCHAR(1000)
+* Updated README.md to notify users about the module only supporting PrestaShop 1.7
+* Changed version number to 4.3.0 for next release
+
+
 20230203 - revulondigital
 ========
 * Edited changelog

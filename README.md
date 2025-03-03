@@ -1,6 +1,6 @@
 # Avarda-Payments
 
-Avardas' payment module for Prestashop.
+Avardas' payment module for Prestashop. This module is only compatible with Prestashop 1.7.
 
 ### Language settings
 
