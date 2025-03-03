@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `PREFIX_avarda_session` (
   `id_cart`          INT(11) UNSIGNED NOT NULL,
   `id_order`         INT(11) UNSIGNED NULL,
   `purchase_id`      VARCHAR(64) NOT NULL,
-  `purchase_token`   VARCHAR(1000) NOT NULL,
+  `purchase_token`   VARCHAR(300) NOT NULL,
   `purchase_expire_timestamp` DATETIME,
   `cart_signature`   VARCHAR(64) NOT NULL,
   `status`           VARCHAR(20) NOT NULL,
